@@ -20,6 +20,7 @@
 
 #define TAG "ttask"
 
+
 /* ==================== [Typedefs] ========================================== */
 
 typedef struct _xf_ttask_handle_t {
@@ -54,45 +55,45 @@ void xf_ttask_vfunc_register(void)
     xf_task_vfunc_register(XF_TASK_TYPE_TTASK, &_ttask_vfunc);
 }
 
-xf_err_t xf_ttask_set_count(xf_task_t task, uint32_t count)
+xf_task_err_t xf_ttask_set_count(xf_task_t task, uint32_t count)
 {
-    XF_ASSERT(task, XF_ERR_INVALID_ARG, TAG, "task must not be NULL");
+    XF_TASK_ASSERT(task, XF_TASK_ERR_INVALID_ARG, TAG, "task must not be NULL");
 
     xf_ttask_handle_t *handle = (xf_ttask_handle_t *)task;
 
     if (handle->base.type != XF_TASK_TYPE_TTASK) {
-        XF_LOGE(TAG, "task must be ttask");
-        return XF_ERR_INVALID_ARG;
+        XF_TASK_LOGE(TAG, "task must be ttask");
+        return XF_TASK_ERR_INVALID_ARG;
     }
 
     if (count > handle->count_max) {
-        XF_LOGE(TAG, "task must less than %d", (int)handle->count_max);
-        return XF_ERR_INVALID_ARG;
+        XF_TASK_LOGE(TAG, "task must less than %d", (int)handle->count_max);
+        return XF_TASK_ERR_INVALID_ARG;
     }
 
     handle->count = count;
 
-    return XF_OK;
+    return XF_TASK_OK;
 }
 
 uint32_t xf_ttask_get_count(xf_task_t task)
 {
-    XF_ASSERT(task, 0, TAG, "task must not be NULL");
+    XF_TASK_ASSERT(task, 0, TAG, "task must not be NULL");
 
     xf_ttask_handle_t *handle = (xf_ttask_handle_t *)task;
 
     return handle->count;
 }
 
-xf_err_t xf_ttask_set_count_max(xf_task_t task, uint32_t count_max)
+xf_task_err_t xf_ttask_set_count_max(xf_task_t task, uint32_t count_max)
 {
-    XF_ASSERT(task, XF_ERR_INVALID_ARG, TAG, "task must not be NULL");
+    XF_TASK_ASSERT(task, XF_TASK_ERR_INVALID_ARG, TAG, "task must not be NULL");
 
     xf_ttask_handle_t *handle = (xf_ttask_handle_t *)task;
 
     handle->count_max = count_max;
 
-    return XF_OK;
+    return XF_TASK_OK;
 }
 
 /* ==================== [Static Functions] ================================== */
@@ -100,10 +101,10 @@ xf_err_t xf_ttask_set_count_max(xf_task_t task, uint32_t count_max)
 static xf_task_t xf_ttask_constructor(xf_task_manager_t manager, xf_task_func_t func, void *func_arg, uint16_t priority,
                                       void *config)
 {
-    xf_ttask_handle_t *task = (xf_ttask_handle_t *)xf_malloc(sizeof(xf_ttask_handle_t));
+    xf_ttask_handle_t *task = (xf_ttask_handle_t *)xf_task_malloc(sizeof(xf_ttask_handle_t));
 
     if (task == NULL) {
-        XF_LOGE(TAG, "memory alloc failed!");
+        XF_TASK_LOGE(TAG, "memory alloc failed!");
         return NULL;
     }
 
@@ -147,7 +148,7 @@ static void xf_ttask_time_handle(xf_task_t task, uint32_t time_ticks)
     // 转换超时时间，如果大于零则触发超时
     handle->base.timeout = xf_task_ticks_to_msec(timeout);
     if (timeout >= 0) {
-        BITS_SET1(handle->base.signal, XF_TASK_SIGNAL_TIMEOUT);
+        XF_TASK_BITS_SET1(handle->base.signal, XF_TASK_SIGNAL_TIMEOUT);
         // 根据循环次数重置循环结束点
         handle->count = (handle->count != XF_TTASK_INFINITE_LOOP) ? (handle->count - 1) : (handle->count);
     }
@@ -163,14 +164,14 @@ static xf_task_time_t xf_ttask_update(xf_task_t task)
         xf_ttask_time_handle(task, time_ticks);
     }
 
-    if (BITS_CHECK(handle->base.signal, XF_TASK_SIGNAL_TIMEOUT)) {
-        BITS_SET0(handle->base.signal, XF_TASK_SIGNAL_TIMEOUT);
-        BITS_SET1(handle->base.signal, XF_TASK_SIGNAL_READY);
+    if (XF_TASK_BITS_CHECK(handle->base.signal, XF_TASK_SIGNAL_TIMEOUT)) {
+        XF_TASK_BITS_SET0(handle->base.signal, XF_TASK_SIGNAL_TIMEOUT);
+        XF_TASK_BITS_SET1(handle->base.signal, XF_TASK_SIGNAL_READY);
     }
 
-    if (BITS_CHECK(handle->base.signal, XF_TASK_SIGNAL_EVENT)) {
-        BITS_SET0(handle->base.signal, XF_TASK_SIGNAL_EVENT);
-        BITS_SET1(handle->base.signal, XF_TASK_SIGNAL_READY);
+    if (XF_TASK_BITS_CHECK(handle->base.signal, XF_TASK_SIGNAL_EVENT)) {
+        XF_TASK_BITS_SET0(handle->base.signal, XF_TASK_SIGNAL_EVENT);
+        XF_TASK_BITS_SET1(handle->base.signal, XF_TASK_SIGNAL_READY);
     }
 
     return time_ticks;

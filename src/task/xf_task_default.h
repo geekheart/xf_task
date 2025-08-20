@@ -39,21 +39,21 @@ extern "C" {
  * @brief 创建默认的任务管理器。
  *
  * @param on_idle 空闲回调函数。
- * @return xf_err_t
+ * @return xf_task_err_t
  *      - XF_FAIL 参数错误
- *      - XF_OK 设置任务就绪成功
+ *      - XF_TASK_OK 设置任务就绪成功
  */
-xf_err_t xf_task_manager_default_init(xf_task_on_idle_t on_idle);
+xf_task_err_t xf_task_manager_default_init(xf_task_on_idle_t on_idle);
 
 /**
  * @brief 设置默认任务管理器的空闲回调函数
  *
  * @param on_idle 空闲回调函数
- * @return xf_err_t
- *      - XF_OK 设置成功
- *      - XF_ERR_INVALID_ARG 参数错误
+ * @return xf_task_err_t
+ *      - XF_TASK_OK 设置成功
+ *      - XF_TASK_ERR_INVALID_ARG 参数错误
  */
-xf_err_t xf_task_manager_set_default_idle(xf_task_on_idle_t on_idle);
+xf_task_err_t xf_task_manager_set_default_idle(xf_task_on_idle_t on_idle);
 
 /**
  * @brief 获取默认的任务管理器。
@@ -72,12 +72,12 @@ void xf_task_manager_run_default(void);
  *
  * @param task 设置为紧急任务的任务。
  * @param force 如果设置为 true，则覆盖任务。设置为 false，当前有紧急任务则设置失败。
- * @return xf_err_t
- *      - XF_OK 设置成功
- *      - XF_ERR_INVALID_ARG 无效参数
- *      - XF_ERR_BUSY 设置失败，`force == false` 且当前已存在紧急任务
+ * @return xf_task_err_t
+ *      - XF_TASK_OK 设置成功
+ *      - XF_TASK_ERR_INVALID_ARG 无效参数
+ *      - XF_TASK_ERR_BUSY 设置失败，`force == false` 且当前已存在紧急任务
  */
-xf_err_t xf_task_set_urgent_task(xf_task_t task, bool force);
+xf_task_err_t xf_task_set_urgent_task(xf_task_t task, bool force);
 
 /**
  * @brief 基于默认 manager，创建任务。
@@ -96,11 +96,11 @@ xf_task_t xf_task_create(xf_task_type_t type, xf_task_func_t func, void *func_ar
  *
  * @param manager 任务管理器对象
  * @param time_ms 补偿时间
- * @return xf_err_t
- *      - XF_ERR_INVALID_ARG 参数错误
- *      - XF_OK 设置补偿时间成功
+ * @return xf_task_err_t
+ *      - XF_TASK_ERR_INVALID_ARG 参数错误
+ *      - XF_TASK_OK 设置补偿时间成功
  */
-xf_err_t xf_task_manager_set_compensation_time_default(xf_task_time_t time_ms);
+xf_task_err_t xf_task_manager_set_compensation_time_default(xf_task_time_t time_ms);
 
 /* ==================== [Macros] ============================================ */
 

@@ -21,7 +21,7 @@
 /* ==================== [Typedefs] ========================================== */
 
 typedef struct _xf_task_event_sub_t {
-    xf_list_t node;
+    xf_task_list_t node;
     xf_task_t task;
     uint32_t event;
     xf_task_event_mode_t mode;
@@ -35,51 +35,51 @@ typedef struct _xf_task_event_sub_t {
 
 /* ==================== [Global Functions] ================================== */
 
-xf_err_t xf_task_event_reg(xf_task_event_t *event, xf_task_t task, uint32_t event_value,
+xf_task_err_t xf_task_event_reg(xf_task_event_t *event, xf_task_t task, uint32_t event_value,
                            xf_task_event_mode_t mode)
 {
-    XF_ASSERT(event, XF_ERR_INVALID_ARG, TAG, "event must not be NULL");
+    XF_TASK_ASSERT(event, XF_TASK_ERR_INVALID_ARG, TAG, "event must not be NULL");
     xf_task_event_sub_t *sub = NULL;
-    xf_list_for_each_entry(sub, &event->event_list, xf_task_event_sub_t, node) {
+    xf_task_list_for_each_entry(sub, &event->event_list, xf_task_event_sub_t, node) {
         if (sub->task == task) {
-            XF_LOGE(TAG, "The task has been registered!");
-            return XF_ERR_BUSY;
+            XF_TASK_LOGE(TAG, "The task has been registered!");
+            return XF_TASK_ERR_BUSY;
         }
     }
-    sub = (xf_task_event_sub_t *)xf_malloc(sizeof(xf_task_event_sub_t));
+    sub = (xf_task_event_sub_t *)xf_task_malloc(sizeof(xf_task_event_sub_t));
     if (sub == NULL) {
-        XF_LOGE(TAG, "memory alloc failed!");
-        return XF_ERR_NO_MEM;
+        XF_TASK_LOGE(TAG, "memory alloc failed!");
+        return XF_TASK_ERR_NO_MEM;
     }
     sub->task = task;
     sub->event = event_value;
     sub->mode = mode;
-    xf_list_init(&sub->node);
-    xf_list_add(&sub->node, &event->event_list);
-    return XF_OK;
+    xf_task_list_init(&sub->node);
+    xf_task_list_add(&sub->node, &event->event_list);
+    return XF_TASK_OK;
 }
 
-xf_err_t xf_task_event_unreg(xf_task_event_t *event, xf_task_t task)
+xf_task_err_t xf_task_event_unreg(xf_task_event_t *event, xf_task_t task)
 {
-    XF_ASSERT(event, XF_ERR_INVALID_ARG, TAG, "event must not be NULL");
+    XF_TASK_ASSERT(event, XF_TASK_ERR_INVALID_ARG, TAG, "event must not be NULL");
     xf_task_event_sub_t *sub = NULL, *tmp = NULL;
-    xf_list_for_each_entry_safe(sub, tmp, &event->event_list, xf_task_event_sub_t, node) {
+    xf_task_list_for_each_entry_safe(sub, tmp, &event->event_list, xf_task_event_sub_t, node) {
         if (sub->task == task) {
-            xf_list_del_init(&sub->node);
-            xf_free(sub);
-            return XF_OK;
+            xf_task_list_del_init(&sub->node);
+            xf_task_free(sub);
+            return XF_TASK_OK;
         }
     }
-    return XF_ERR_NOT_FOUND;
+    return XF_TASK_ERR_NOT_FOUND;
 }
 
 
-xf_err_t xf_task_event_send(xf_task_event_t *event, uint32_t event_value)
+xf_task_err_t xf_task_event_send(xf_task_event_t *event, uint32_t event_value)
 {
-    XF_ASSERT(event, XF_ERR_INVALID_ARG, TAG, "event must not be NULL");
+    XF_TASK_ASSERT(event, XF_TASK_ERR_INVALID_ARG, TAG, "event must not be NULL");
 
     xf_task_event_sub_t *sub = NULL;
-    xf_list_for_each_entry(sub, &event->event_list, xf_task_event_sub_t, node) {
+    xf_task_list_for_each_entry(sub, &event->event_list, xf_task_event_sub_t, node) {
         switch (sub->mode) {
         case XF_TASK_EVENT_OR:
             if ((sub->event & event_value) >  0) {
@@ -97,7 +97,7 @@ xf_err_t xf_task_event_send(xf_task_event_t *event, uint32_t event_value)
             break;
         }
     }
-    return XF_OK;
+    return XF_TASK_OK;
 }
 
 /* ==================== [Static Functions] ================================== */

@@ -8,7 +8,7 @@ static void send_task(xf_task_t task)
 {
     intptr_t num = (intptr_t) xf_task_get_arg(task);
     while (1) {
-        if (xf_ctask_queue_send(cqueue, &num, 1000) == XF_OK) {
+        if (xf_ctask_queue_send(cqueue, &num, 1000) == XF_TASK_OK) {
             printf("send success\n");
         } else {
             printf("timeout! queue full\n");
@@ -20,7 +20,7 @@ static void receive_task(xf_task_t task)
 {
     intptr_t buffer = 0;
     while (1) {
-        if (xf_ctask_queue_receive(cqueue, &buffer, 1000) == XF_OK) {
+        if (xf_ctask_queue_receive(cqueue, &buffer, 1000) == XF_TASK_OK) {
             printf("receive:%d\n", (int)buffer);
         } else {
             printf("timeout! queue empty\n");

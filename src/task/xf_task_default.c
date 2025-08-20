@@ -29,16 +29,16 @@ static xf_task_manager_t default_manager = NULL;
 
 /* ==================== [Global Functions] ================================== */
 
-xf_err_t xf_task_manager_default_init(xf_task_on_idle_t on_idle)
+xf_task_err_t xf_task_manager_default_init(xf_task_on_idle_t on_idle)
 {
     default_manager = xf_task_manager_create(on_idle);
     if (default_manager == NULL) {
-        return XF_FAIL;
+        return XF_TASK_ERR_INVALID_ARG;
     }
-    return XF_OK;
+    return XF_TASK_OK;
 }
 
-xf_err_t xf_task_manager_set_default_idle(xf_task_on_idle_t on_idle)
+xf_task_err_t xf_task_manager_set_default_idle(xf_task_on_idle_t on_idle)
 {
     return xf_task_manager_set_idle(default_manager, on_idle);
 }
@@ -53,7 +53,7 @@ void xf_task_manager_run_default(void)
     xf_task_manager_run(default_manager);
 }
 
-xf_err_t xf_task_set_urgent_task(xf_task_t task, bool force)
+xf_task_err_t xf_task_set_urgent_task(xf_task_t task, bool force)
 {
     return xf_task_set_urgent_task_with_manager(default_manager, task, force);
 }
@@ -63,7 +63,7 @@ xf_task_t xf_task_create(xf_task_type_t type, xf_task_func_t func, void *func_ar
     return xf_task_create_with_manager(default_manager, type, func, func_arg, priority, config);
 }
 
-xf_err_t xf_task_manager_set_compensation_time_default(xf_task_time_t time_ms)
+xf_task_err_t xf_task_manager_set_compensation_time_default(xf_task_time_t time_ms)
 {
     return xf_task_manager_set_compensation_time(default_manager, time_ms);
 }

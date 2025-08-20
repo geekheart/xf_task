@@ -141,12 +141,12 @@ void xf_task_feel_hungery_disable(xf_task_t task);
  * @note 任务出于挂起中的时候，时间不算入延时事件中。
  *
  * @param task 任务对象。
- * @return xf_err_t
- *      - XF_ERR_INVALID_ARG 参数错误
- *      - XF_ERR_INVALID_STATE 状态错误，状态不能是删除态
- *      - XF_OK 挂起成功
+ * @return xf_task_err_t
+ *      - XF_TASK_ERR_INVALID_ARG 参数错误
+ *      - XF_TASK_ERR_INVALID_STATE 状态错误，状态不能是删除态
+ *      - XF_TASK_OK 挂起成功
  */
-xf_err_t xf_task_suspend(xf_task_t task);
+xf_task_err_t xf_task_suspend(xf_task_t task);
 
 /**
  * @brief 任务从挂起中恢复，进入调度。
@@ -154,22 +154,22 @@ xf_err_t xf_task_suspend(xf_task_t task);
  * @note 恢复的任务默认出于阻塞态。
  *
  * @param task 任务对象。
- * @return xf_err_t
- *      - XF_ERR_INVALID_ARG 参数错误
- *      - XF_ERR_INVALID_STATE 状态错误，状态必须属于挂起态
- *      - XF_OK 恢复成功
+ * @return xf_task_err_t
+ *      - XF_TASK_ERR_INVALID_ARG 参数错误
+ *      - XF_TASK_ERR_INVALID_STATE 状态错误，状态必须属于挂起态
+ *      - XF_TASK_OK 恢复成功
  */
-xf_err_t xf_task_resume(xf_task_t task);
+xf_task_err_t xf_task_resume(xf_task_t task);
 
 /**
  * @brief 任务触发。无论是否到达唤醒时间，都会触发。
  *
  * @param task 任务对象。
- * @return xf_err_t
- *      - XF_ERR_INVALID_ARG 参数错误
- *      - XF_OK 设置成功
+ * @return xf_task_err_t
+ *      - XF_TASK_ERR_INVALID_ARG 参数错误
+ *      - XF_TASK_OK 设置成功
  */
-xf_err_t xf_task_trigger(xf_task_t task);
+xf_task_err_t xf_task_trigger(xf_task_t task);
 
 /**
  * @brief 获取当前任务类型。
@@ -200,11 +200,11 @@ uint16_t xf_task_get_priority(xf_task_t task);
  *
  * @param task 任务对象。
  * @param priority 任务的优先级设置。
- * @return xf_err_t
- *      - XF_ERR_INVALID_ARG 参数错误，
- *      - XF_OK 优先级设置成功
+ * @return xf_task_err_t
+ *      - XF_TASK_ERR_INVALID_ARG 参数错误，
+ *      - XF_TASK_OK 优先级设置成功
  */
-xf_err_t xf_task_set_priority(xf_task_t task, uint16_t priority);
+xf_task_err_t xf_task_set_priority(xf_task_t task, uint16_t priority);
 
 /**
  * @brief 设置任务的延时。
@@ -212,11 +212,11 @@ xf_err_t xf_task_set_priority(xf_task_t task, uint16_t priority);
  *
  * @param task 任务对象。
  * @param delay_ms 延时时间，单位为 ms。
- * @return xf_err_t
- *      - XF_ERR_INVALID_ARG 参数错误，
- *      - XF_OK 任务延时设置成功
+ * @return xf_task_err_t
+ *      - XF_TASK_ERR_INVALID_ARG 参数错误，
+ *      - XF_TASK_OK 任务延时设置成功
  */
-xf_err_t xf_task_set_delay(xf_task_t task, uint32_t delay_ms);
+xf_task_err_t xf_task_set_delay(xf_task_t task, uint32_t delay_ms);
 
 /**
  * @brief 设置当前任务的执行函数（某些种类任务可能不适用）。
@@ -224,11 +224,11 @@ xf_err_t xf_task_set_delay(xf_task_t task, uint32_t delay_ms);
  * @param task 任务对象。
  * @param func 执行的函数。
  * @param arg 用户自定义执行任务的参数。
- * @return xf_err_t
- *      - XF_ERR_INVALID_ARG 参数错误，
- *      - XF_OK 设置函数成功
+ * @return xf_task_err_t
+ *      - XF_TASK_ERR_INVALID_ARG 参数错误，
+ *      - XF_TASK_OK 设置函数成功
  */
-xf_err_t xf_task_set_func(xf_task_t task, xf_task_func_t func, void *arg);
+xf_task_err_t xf_task_set_func(xf_task_t task, xf_task_func_t func, void *arg);
 
 #if XF_TASK_USER_DATA_IS_ENABLE
 
@@ -237,11 +237,11 @@ xf_err_t xf_task_set_func(xf_task_t task, xf_task_func_t func, void *arg);
  *
  * @param task 任务对象。
  * @param user_data 用户自定义的数据。
- * @return xf_err_t
- *      - XF_ERR_INVALID_ARG 参数错误，
- *      - XF_OK 设置函数成功
+ * @return xf_task_err_t
+ *      - XF_TASK_ERR_INVALID_ARG 参数错误，
+ *      - XF_TASK_OK 设置函数成功
  */
-xf_err_t xf_task_set_user_data(xf_task_t task, void *user_data);
+xf_task_err_t xf_task_set_user_data(xf_task_t task, void *user_data);
 
 /**
  * @brief 获取当前任务的 user_data。

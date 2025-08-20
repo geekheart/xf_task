@@ -1,7 +1,5 @@
 set_symbols("debug")
 
-includes("xf_utils/xmake.lua")
-
 -- xf_task所有的内容
 function add_xf_task() 
     add_files("src/kernel/*.c")
@@ -9,7 +7,6 @@ function add_xf_task()
     add_files("src/utils/*.c")
     add_files("src/task/*.c")
     add_includedirs("src")
-    add_xf_utils("xf_utils")
 end
 
 -- xf_task移植的内容

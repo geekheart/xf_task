@@ -15,7 +15,7 @@
 #include "../port/xf_task_port_internal.h"
 #include "xf_task_manager.h"
 #include "xf_task_base.h"
-#include "xf_utils.h"
+// #include "xf_utils.h"
 
 /* ==================== [Defines] =========================================== */
 
@@ -26,13 +26,13 @@
 typedef struct _xf_task_manager_handle_t {
     xf_task_t current_task;                         /*!< 当前执行任务 */
     xf_task_t urgent_task;                          /*!< 紧急任务 */
-    xf_list_t ready_list[XF_TASK_PRIORITY_LEVELS];  /*!< 任务就绪队列 */
-    xf_list_t blocked_list;                         /*!< 任务阻塞队列 */
-    xf_list_t suspend_list;                         /*!< 任务挂起队列，挂起任务不参与调度，需要手动恢复 */
-    xf_list_t destroy_list;                         /*!< 任务销毁队列，进行异步销毁 */
+    xf_task_list_t ready_list[XF_TASK_PRIORITY_LEVELS];  /*!< 任务就绪队列 */
+    xf_task_list_t blocked_list;                         /*!< 任务阻塞队列 */
+    xf_task_list_t suspend_list;                         /*!< 任务挂起队列，挂起任务不参与调度，需要手动恢复 */
+    xf_task_list_t destroy_list;                         /*!< 任务销毁队列，进行异步销毁 */
     xf_task_on_idle_t on_idle;                      /*!< 空闲任务回调 */
 #if XF_TASK_HUNGER_IS_ENABLE
-    xf_list_t hunger_list;                          /*!< 任务饥饿队列，达到其指定值进行跳跃 */
+    xf_task_list_t hunger_list;                          /*!< 任务饥饿队列，达到其指定值进行跳跃 */
 #endif // XF_TASK_HUNGER_IS_ENABLE
 #if XF_TASK_CONTEXT_IS_ENABLE
     xf_task_context_t context;                      /*!< 调度器上下文 */
@@ -52,45 +52,45 @@ static inline void xf_task_update_timeout(xf_task_base_t *task);
 
 xf_task_manager_t xf_task_manager_create(xf_task_on_idle_t on_idle)
 {
-    xf_task_manager_handle_t *manager = (xf_task_manager_handle_t *)xf_malloc(sizeof(xf_task_manager_handle_t));
-    XF_ASSERT(manager, NULL, TAG, "memory alloc failed!");
+    xf_task_manager_handle_t *manager = (xf_task_manager_handle_t *)xf_task_malloc(sizeof(xf_task_manager_handle_t));
+    XF_TASK_ASSERT(manager, NULL, TAG, "memory alloc failed!");
 
     manager->current_task = NULL;
     manager->urgent_task = NULL;
     manager->on_idle = on_idle;
 
     for (size_t i = 0; i < XF_TASK_PRIORITY_LEVELS; i++) {
-        xf_list_init(&manager->ready_list[i]);
+        xf_task_list_init(&manager->ready_list[i]);
     }
-    xf_list_init(&manager->blocked_list);
-    xf_list_init(&manager->destroy_list);
-    xf_list_init(&manager->suspend_list);
+    xf_task_list_init(&manager->blocked_list);
+    xf_task_list_init(&manager->destroy_list);
+    xf_task_list_init(&manager->suspend_list);
 #if XF_TASK_HUNGER_IS_ENABLE
-    xf_list_init(&manager->hunger_list);
+    xf_task_list_init(&manager->hunger_list);
 #endif // XF_TASK_HUNGER_IS_ENABLE
 
     return (xf_task_manager_t)manager;
 }
 
-xf_err_t xf_task_manager_set_idle(xf_task_manager_t manager, xf_task_on_idle_t on_idle)
+xf_task_err_t xf_task_manager_set_idle(xf_task_manager_t manager, xf_task_on_idle_t on_idle)
 {
-    XF_ASSERT(manager, XF_ERR_INVALID_ARG, TAG, "manager must not be NULL!");
-    XF_ASSERT(on_idle, XF_ERR_INVALID_ARG, TAG, "on_idle must not be NULL!");
+    XF_TASK_ASSERT(manager, XF_TASK_ERR_INVALID_ARG, TAG, "manager must not be NULL!");
+    XF_TASK_ASSERT(on_idle, XF_TASK_ERR_INVALID_ARG, TAG, "on_idle must not be NULL!");
 
     xf_task_manager_handle_t *manager_handle = (xf_task_manager_handle_t *)manager;
     manager_handle->on_idle = on_idle;
-    return XF_OK;
+    return XF_TASK_OK;
 }
 
 void xf_task_manager_delete(xf_task_manager_t manager)
 {
-    XF_ASSERT(manager, XF_RETURN_VOID, TAG, "manager must not be NULL!");
-    xf_free(manager);
+    XF_TASK_ASSERT(manager, XF_TASK_RETURN_VOID, TAG, "manager must not be NULL!");
+    xf_task_free(manager);
 }
 
 void xf_task_manager_run(xf_task_manager_t manager)
 {
-    XF_ASSERT(manager, XF_RETURN_VOID, TAG, "manager_handle must not be NULL");
+    XF_TASK_ASSERT(manager, XF_TASK_RETURN_VOID, TAG, "manager_handle must not be NULL");
 
     xf_task_manager_handle_t *manager_handle = (xf_task_manager_handle_t *)manager;
     volatile uint32_t index = 0;
@@ -102,19 +102,19 @@ void xf_task_manager_run(xf_task_manager_t manager)
     xf_task_base_t *task, *_task;
 
     // 阻塞任务队列处理
-    xf_list_for_each_entry_safe(task, _task, &manager_handle->blocked_list, xf_task_base_t, node) {
+    xf_task_list_for_each_entry_safe(task, _task, &manager_handle->blocked_list, xf_task_base_t, node) {
         // 更新信号
         uint32_t time_ticks = task->vfunc->update(task);
 
         // 检查信号，如果符合则加入就绪
-        if (BITS_CHECK(task->signal, XF_TASK_SIGNAL_READY)) {
-            xf_list_del_init(&task->node);
+        if (XF_TASK_BITS_CHECK(task->signal, XF_TASK_SIGNAL_READY)) {
+            xf_task_list_del_init(&task->node);
             xf_task_base_set_state(task, XF_TASK_STATE_READY); // 设置为就绪态
-            xf_list_add_tail(&task->node, &manager_handle->ready_list[task->priority]);
-            BITS_SET0(task->signal, XF_TASK_SIGNAL_READY);
+            xf_task_list_add_tail(&task->node, &manager_handle->ready_list[task->priority]);
+            XF_TASK_BITS_SET0(task->signal, XF_TASK_SIGNAL_READY);
 #if XF_TASK_HUNGER_IS_ENABLE
-            if (BITS_CHECK(task->flag, XF_TASK_FALG_FEEL_HUNGERY)) {
-                xf_list_add_tail(&task->hunger_node, &manager_handle->hunger_list);
+            if (XF_TASK_BITS_CHECK(task->flag, XF_TASK_FALG_FEEL_HUNGERY)) {
+                xf_task_list_add_tail(&task->hunger_node, &manager_handle->hunger_list);
             }
 #endif // XF_TASK_HUNGER_IS_ENABLE
         }
@@ -139,12 +139,12 @@ void xf_task_manager_run(xf_task_manager_t manager)
     // 就绪任务队列处理
     // 这里决定了它的优先级数值越小优先级越高
     for (index = 0; index < XF_TASK_PRIORITY_LEVELS; index++) {
-        if (xf_list_empty(&manager_handle->ready_list[index])) {
+        if (xf_task_list_empty(&manager_handle->ready_list[index])) {
             continue;
         }
         // 选取相对最高优先级的任务作为执行任务
         if (false == is_get_func) {
-            task = xf_list_first_entry(&manager_handle->ready_list[index], xf_task_base_t, node);
+            task = xf_task_list_first_entry(&manager_handle->ready_list[index], xf_task_base_t, node);
             xf_task_run(task);
             is_get_func = true;
             break;
@@ -154,8 +154,8 @@ void xf_task_manager_run(xf_task_manager_t manager)
     // 上述循环正常退出，则说明没有就绪任务，运行空闲任务
     if (false == is_get_func) {
         // 空闲时间，处理一下需要删除的任务
-        xf_list_for_each_entry_safe(task, _task, &manager_handle->destroy_list, xf_task_base_t, node) {
-            xf_list_del_init(&task->node);
+        xf_task_list_for_each_entry_safe(task, _task, &manager_handle->destroy_list, xf_task_base_t, node) {
+            xf_task_list_del_init(&task->node);
             task->delete (task);
         }
         // 进一步修正空闲时间
@@ -171,7 +171,7 @@ void xf_task_manager_run(xf_task_manager_t manager)
     else {
         // 对事件触发任务一视同仁
         // 对感受饥饿的任务进行临时优先级跳跃
-        xf_list_for_each_entry_safe(task, _task, &manager_handle->hunger_list, xf_task_base_t, hunger_node) {
+        xf_task_list_for_each_entry_safe(task, _task, &manager_handle->hunger_list, xf_task_base_t, hunger_node) {
             xf_task_update_timeout(task);
 
             // 计算爬升等级
@@ -184,8 +184,8 @@ void xf_task_manager_run(xf_task_manager_t manager)
             }
 
             // 重置其优先级
-            xf_list_del_init(&task->node);
-            xf_list_add(&task->node, &manager_handle->ready_list[priority]);
+            xf_task_list_del_init(&task->node);
+            xf_task_list_add(&task->node, &manager_handle->ready_list[priority]);
         }
     }
 #endif // XF_TASK_HUNGER_IS_ENABLE
@@ -194,75 +194,75 @@ void xf_task_manager_run(xf_task_manager_t manager)
 
 xf_task_t xf_task_manager_get_current_task(xf_task_manager_t manager)
 {
-    XF_ASSERT(manager, NULL, TAG, "manager must not be NULL!");
+    XF_TASK_ASSERT(manager, NULL, TAG, "manager must not be NULL!");
 
     xf_task_manager_handle_t *manager_handle = (xf_task_manager_handle_t *)manager;
 
     return manager_handle->current_task;
 }
 
-xf_err_t xf_task_manager_task_ready(xf_task_manager_t manager, xf_task_t task)
+xf_task_err_t xf_task_manager_task_ready(xf_task_manager_t manager, xf_task_t task)
 {
-    XF_ASSERT(manager, XF_ERR_INVALID_ARG, TAG, "manager must not be NULL!");
+    XF_TASK_ASSERT(manager, XF_TASK_ERR_INVALID_ARG, TAG, "manager must not be NULL!");
 
     xf_task_manager_handle_t *manager_handle = (xf_task_manager_handle_t *)manager;
 
     xf_task_base_t *task_base = task;
 
-    xf_list_del_init(&task_base->node);
+    xf_task_list_del_init(&task_base->node);
 
     xf_task_base_set_state(task, XF_TASK_STATE_READY);
-    xf_list_add_tail(&task_base->node, &manager_handle->ready_list[task_base->priority]);
+    xf_task_list_add_tail(&task_base->node, &manager_handle->ready_list[task_base->priority]);
 
-    return XF_OK;
+    return XF_TASK_OK;
 }
 
-xf_err_t xf_task_manager_task_suspend(xf_task_manager_t manager, xf_task_t task)
+xf_task_err_t xf_task_manager_task_suspend(xf_task_manager_t manager, xf_task_t task)
 {
-    XF_ASSERT(manager, XF_ERR_INVALID_ARG, TAG, "manager must not be NULL!");
+    XF_TASK_ASSERT(manager, XF_TASK_ERR_INVALID_ARG, TAG, "manager must not be NULL!");
 
     xf_task_manager_handle_t *manager_handle = (xf_task_manager_handle_t *)manager;
 
     xf_task_base_t *task_base = task;
 
-    xf_list_del_init(&task_base->node);
+    xf_task_list_del_init(&task_base->node);
 
     xf_task_base_set_state(task, XF_TASK_STATE_SUSPEND);
-    xf_list_add_tail(&task_base->node, &manager_handle->suspend_list);
+    xf_task_list_add_tail(&task_base->node, &manager_handle->suspend_list);
 
-    return XF_OK;
+    return XF_TASK_OK;
 }
 
-xf_err_t xf_task_manager_task_destory(xf_task_manager_t manager, xf_task_t task)
+xf_task_err_t xf_task_manager_task_destory(xf_task_manager_t manager, xf_task_t task)
 {
-    XF_ASSERT(manager, XF_ERR_INVALID_ARG, TAG, "manager must not be NULL!");
+    XF_TASK_ASSERT(manager, XF_TASK_ERR_INVALID_ARG, TAG, "manager must not be NULL!");
 
     xf_task_manager_handle_t *manager_handle = (xf_task_manager_handle_t *)manager;
 
     xf_task_base_t *task_base = task;
 
-    xf_list_del_init(&task_base->node);
+    xf_task_list_del_init(&task_base->node);
 
     xf_task_base_set_state(task, XF_TASK_STATE_DELETE);
-    xf_list_add_tail(&task_base->node, &manager_handle->destroy_list);
+    xf_task_list_add_tail(&task_base->node, &manager_handle->destroy_list);
 
-    return XF_OK;
+    return XF_TASK_OK;
 }
 
-xf_err_t xf_task_manager_task_blocked(xf_task_manager_t manager, xf_task_t task)
+xf_task_err_t xf_task_manager_task_blocked(xf_task_manager_t manager, xf_task_t task)
 {
-    XF_ASSERT(manager, XF_ERR_INVALID_ARG, TAG, "manager must not be NULL!");
+    XF_TASK_ASSERT(manager, XF_TASK_ERR_INVALID_ARG, TAG, "manager must not be NULL!");
 
     xf_task_manager_handle_t *manager_handle = (xf_task_manager_handle_t *)manager;
 
     xf_task_base_t *task_base = task;
 
-    xf_list_del_init(&task_base->node);
+    xf_task_list_del_init(&task_base->node);
 
     xf_task_base_set_state(task, XF_TASK_STATE_BLOCKED);
-    xf_list_add_tail(&task_base->node, &manager_handle->blocked_list);
+    xf_task_list_add_tail(&task_base->node, &manager_handle->blocked_list);
 
-    return XF_OK;
+    return XF_TASK_OK;
 }
 
 #if XF_TASK_CONTEXT_IS_ENABLE
@@ -274,36 +274,36 @@ xf_task_context_t *xf_task_manager_get_context(xf_task_manager_t manager)
 }
 #endif // XF_TASK_CONTEXT_IS_ENABLE
 
-xf_err_t xf_task_set_urgent_task_with_manager(xf_task_manager_t manager, xf_task_t task, bool force)
+xf_task_err_t xf_task_set_urgent_task_with_manager(xf_task_manager_t manager, xf_task_t task, bool force)
 {
-    XF_ASSERT(manager, XF_ERR_INVALID_ARG, TAG, "manager must not be NULL");
-    XF_ASSERT(task, XF_ERR_INVALID_ARG, TAG, "task must not be NULL");
+    XF_TASK_ASSERT(manager, XF_TASK_ERR_INVALID_ARG, TAG, "manager must not be NULL");
+    XF_TASK_ASSERT(task, XF_TASK_ERR_INVALID_ARG, TAG, "task must not be NULL");
 
     xf_task_manager_handle_t *manager_handle = (xf_task_manager_handle_t *)manager;
 
     if (manager_handle->urgent_task != NULL && !force) {
-        return XF_ERR_BUSY;
+        return XF_TASK_ERR_BUSY;
     }
 
     manager_handle->urgent_task = task;
     xf_task_base_set_state(task, XF_TASK_STATE_READY);
 
-    return XF_OK;
+    return XF_TASK_OK;
 }
 
-xf_err_t xf_task_manager_set_compensation_time(xf_task_manager_t manager, xf_task_time_t time_ms)
+xf_task_err_t xf_task_manager_set_compensation_time(xf_task_manager_t manager, xf_task_time_t time_ms)
 {
-    XF_ASSERT(manager, XF_ERR_INVALID_ARG, TAG, "manager must not be NULL");
+    XF_TASK_ASSERT(manager, XF_TASK_ERR_INVALID_ARG, TAG, "manager must not be NULL");
 
     // tickless状态下，通过偏移时间计算出补偿的时间，并给所有阻塞任务进行补偿
     xf_task_manager_handle_t *manager_handle = (xf_task_manager_handle_t *)manager;
     xf_task_base_t *task, *_task;
     xf_task_time_t compensation_ticks = xf_task_msec_to_ticks(time_ms);
-    xf_list_for_each_entry_safe(task, _task, &manager_handle->blocked_list, xf_task_base_t, node) {
+    xf_task_list_for_each_entry_safe(task, _task, &manager_handle->blocked_list, xf_task_base_t, node) {
         task->wake_up -= compensation_ticks;
     }
 
-    return XF_OK;
+    return XF_TASK_OK;
 }
 
 /* ==================== [Static Functions] ================================== */
@@ -313,20 +313,20 @@ static inline void xf_task_run(xf_task_base_t *task)
     xf_task_manager_handle_t *manager = (xf_task_manager_handle_t *)task->manager;
 
 #if XF_TASK_HUNGER_IS_ENABLE
-    if (BITS_CHECK(task->flag, XF_TASK_FALG_FEEL_HUNGERY)) {
-        xf_list_del_init(&task->hunger_node);
+    if (XF_TASK_BITS_CHECK(task->flag, XF_TASK_FALG_FEEL_HUNGERY)) {
+        xf_task_list_del_init(&task->hunger_node);
     }
 #endif // XF_TASK_HUNGER_IS_ENABLE
 
-    xf_list_del_init(&task->node);                   // 从原有链表中脱离
+    xf_task_list_del_init(&task->node);                   // 从原有链表中脱离
     manager->current_task = task;                       // 放入当前执行的任务
     xf_task_update_timeout(task);
     task->vfunc->exec(manager);                           // 执行任务
     manager->current_task = NULL;
 
     // 如果设置成功，则进入阻塞状态。如果设置不成功（删除或挂起）则不管它
-    if (xf_task_base_set_state(task, XF_TASK_STATE_BLOCKED) == XF_OK) {
-        xf_list_add_tail(&task->node, &manager->blocked_list);
+    if (xf_task_base_set_state(task, XF_TASK_STATE_BLOCKED) == XF_TASK_OK) {
+        xf_task_list_add_tail(&task->node, &manager->blocked_list);
     }
 }
 

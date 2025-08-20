@@ -60,11 +60,11 @@ xf_task_pool_t xf_task_pool_create_with_manager(uint32_t max_works, xf_task_mana
  * @brief 删除任务池。
  *
  * @param pool 任务池对象。
- * @return xf_err_t
- *      - XF_ERR_INVALID_ARG 参数错误
- *      - XF_OK 任务池删除成功
+ * @return xf_task_err_t
+ *      - XF_TASK_ERR_INVALID_ARG 参数错误
+ *      - XF_TASK_OK 任务池删除成功
  */
-xf_err_t xf_task_pool_delete(xf_task_pool_t pool);
+xf_task_err_t xf_task_pool_delete(xf_task_pool_t pool);
 
 /**
  * @brief 初始化任务。

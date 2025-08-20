@@ -291,9 +291,9 @@ static inline xf_task_pool_t xf_ntask_pool_create(uint32_t max_works)
  * 
  * @param topic_id 
  * @param size 
- * @return xf_err_t 
+ * @return xf_task_err_t 
  */
-static inline xf_err_t xf_task_mbus_reg_topic(uint32_t topic_id, uint32_t size)
+static inline xf_task_err_t xf_task_mbus_reg_topic(uint32_t topic_id, uint32_t size)
 {
     return xf_task_mbus_reg_topic_with_manager(xf_task_get_default_manager(), topic_id, size);
 }

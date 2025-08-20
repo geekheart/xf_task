@@ -111,7 +111,7 @@ typedef struct _xf_task_vfunc_t {
  * @brief task 的父对象，保存了 task 的公共属性。
  */
 typedef struct _xf_task_base_t {
-    xf_list_t node;                 /*!< 任务节点，挂载在 manager 上 */
+    xf_task_list_t node;                 /*!< 任务节点，挂载在 manager 上 */
     xf_task_manager_t manager;      /*!< 保存 task 所属的 manager ，以便更快访问 manager */
     xf_task_func_t func;            /*!< 每个任务所执行的内容 */
     void *arg;                      /*!< 任务中用户定义参数 */
@@ -131,7 +131,7 @@ typedef struct _xf_task_base_t {
                                      *   task pool 中通过替换它实现任务池回收任务 */
 
 #if XF_TASK_HUNGER_IS_ENABLE
-    xf_list_t hunger_node;          /*!< 饥饿节点，挂载在 manager 上的 hunger_list 上，
+    xf_task_list_t hunger_node;          /*!< 饥饿节点，挂载在 manager 上的 hunger_list 上，
                                      *   以便更快速的遍历饥饿任务 */
     uint32_t hunger_time;           /*!< 任务饥饿度，单位为 ms。超过该时间，任务爬升一个优先级 */
 #endif
@@ -149,22 +149,22 @@ typedef struct _xf_task_base_t {
  *
  * @param type 任务类型，该类型通过注册表 xf_task_reg.inc 实现静态注册任务类型。
  * @param vfunc 用于调用子任务功能的虚函数。
- * @return xf_err_t
- *      - XF_ERR_INVALID_ARG 参数错误
+ * @return xf_task_err_t
+ *      - XF_TASK_ERR_INVALID_ARG 参数错误
  *      - XF_ERR_INITED 已初始化
- *      - XF_OK 注册完成
+ *      - XF_TASK_OK 注册完成
  */
-xf_err_t xf_task_vfunc_register(xf_task_type_t type, const xf_task_vfunc_t *vfunc);
+xf_task_err_t xf_task_vfunc_register(xf_task_type_t type, const xf_task_vfunc_t *vfunc);
 
 /**
  * @brief task 注销虚函数注册（一般用不到的函数）。
  *
  * @param type 任务类型，该类型通过注册表 xf_task_reg.inc 实现静态注册任务类型。
- * @return xf_err_t
- *      - XF_ERR_INVALID_ARG 参数错误
- *      - XF_OK 注销完成
+ * @return xf_task_err_t
+ *      - XF_TASK_ERR_INVALID_ARG 参数错误
+ *      - XF_TASK_OK 注销完成
  */
-xf_err_t xf_task_vfunc_unregister(xf_task_type_t type);
+xf_task_err_t xf_task_vfunc_unregister(xf_task_type_t type);
 
 /**
  * @brief task 获取虚函数。
@@ -179,11 +179,11 @@ const xf_task_vfunc_t *xf_task_get_vfunc(xf_task_type_t type);
  *
  * @param task task 任务对象。
  * @param state task 任务状态。
- * @return xf_err_t
- *      - XF_ERR_NOT_SUPPORTED 当任务出于删除态或者挂起态，此时设置状态无用
- *      - XF_OK 设置成功
+ * @return xf_task_err_t
+ *      - XF_TASK_ERR_NOT_SUPPORTED 当任务出于删除态或者挂起态，此时设置状态无用
+ *      - XF_TASK_OK 设置成功
  */
-xf_err_t xf_task_base_set_state(xf_task_t task, xf_task_state_t state);
+xf_task_err_t xf_task_base_set_state(xf_task_t task, xf_task_state_t state);
 
 /**
  * @brief task 初始化。

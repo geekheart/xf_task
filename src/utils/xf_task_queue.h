@@ -14,7 +14,10 @@
 
 /* ==================== [Includes] ========================================== */
 
-#include "xf_utils.h"
+// #include "xf_utils.h"
+#include "xf_task_utils_config.h"
+
+#include "../kernel/xf_task_kernel.h"
 
 /**
  * @cond XFAPI_USER
@@ -63,21 +66,21 @@ typedef enum _xf_task_queue_mode_t {
  * @param data 队列数据指针。
  * @param size 队列数据大小。
  * @param count 队列数据个数。
- * @return xf_err_t
- *      - XF_ERR_INVALID_ARG 参数错误
- *      - XF_OK 初始化成功
+ * @return xf_task_err_t
+ *      - XF_TASK_ERR_INVALID_ARG 参数错误
+ *      - XF_TASK_OK 初始化成功
  */
-xf_err_t xf_task_queue_init(xf_task_queue_t *const queue, void *data, const size_t size, const size_t count);
+xf_task_err_t xf_task_queue_init(xf_task_queue_t *const queue, void *data, const size_t size, const size_t count);
 
 /**
  * @brief 重置队列。
  *
  * @param queue 队列对象。
- * @return xf_err_t
- *      - XF_ERR_INVALID_ARG 参数错误
- *      - XF_OK 队列重置成功
+ * @return xf_task_err_t
+ *      - XF_TASK_ERR_INVALID_ARG 参数错误
+ *      - XF_TASK_OK 队列重置成功
  */
-xf_err_t xf_task_queue_reset(xf_task_queue_t *const queue);
+xf_task_err_t xf_task_queue_reset(xf_task_queue_t *const queue);
 
 /**
  * @brief 判断队列是否为空。
@@ -129,33 +132,33 @@ bool xf_task_queue_is_full(const xf_task_queue_t *const queue);
  * @param queue 队列对象。
  * @param item 发送的数据。
  * @param pos 发送模式。
- * @return xf_err_t
- *      - XF_ERR_INVALID_ARG 参数错误
- *      - XF_ERR_BUSY 队列已满
- *      - XF_OK 发送成功
+ * @return xf_task_err_t
+ *      - XF_TASK_ERR_INVALID_ARG 参数错误
+ *      - XF_TASK_ERR_BUSY 队列已满
+ *      - XF_TASK_OK 发送成功
  */
-xf_err_t xf_task_queue_send(xf_task_queue_t *const queue, void *item, const xf_task_queue_mode_t pos);
+xf_task_err_t xf_task_queue_send(xf_task_queue_t *const queue, void *item, const xf_task_queue_mode_t pos);
 
 /**
  * @brief 从队列删除第一个元素。
  *
  * @param queue 队列对象。
- * @return xf_err_t
- *      - XF_ERR_INVALID_ARG 参数错误
- *      - XF_OK 删除成功
+ * @return xf_task_err_t
+ *      - XF_TASK_ERR_INVALID_ARG 参数错误
+ *      - XF_TASK_OK 删除成功
  */
-xf_err_t xf_task_queue_remove_front(xf_task_queue_t *const queue);
+xf_task_err_t xf_task_queue_remove_front(xf_task_queue_t *const queue);
 
 /**
  * @brief 从队列接收一个元素。
  *
  * @param queue 队列对象。
  * @param buffer 接收的数据。
- * @return xf_err_t
- *      - XF_ERR_INVALID_ARG 参数错误
- *      - XF_OK 接收成功
+ * @return xf_task_err_t
+ *      - XF_TASK_ERR_INVALID_ARG 参数错误
+ *      - XF_TASK_OK 接收成功
  */
-xf_err_t xf_task_queue_receive(xf_task_queue_t *const queue, void *const buffer);
+xf_task_err_t xf_task_queue_receive(xf_task_queue_t *const queue, void *const buffer);
 
 /* ==================== [Macros] ============================================ */
 

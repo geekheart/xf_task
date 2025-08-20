@@ -47,15 +47,15 @@ static void xf_task_empty(xf_task_t task);
 xf_task_pool_t xf_task_pool_create_with_manager(uint32_t max_works, xf_task_manager_t manager, xf_task_type_t type,
         void *config)
 {
-    XF_ASSERT(max_works, NULL, TAG, "max_works must not be 0");
-    XF_ASSERT(manager, NULL, TAG, "manager must not be NULL");
-    XF_ASSERT(type < _XF_TASK_TYPE_MAX, NULL, TAG, "manager must less than %d", _XF_TASK_TYPE_MAX);
-    XF_ASSERT(config, NULL, TAG, "config must not be NULL");
+    XF_TASK_ASSERT(max_works, NULL, TAG, "max_works must not be 0");
+    XF_TASK_ASSERT(manager, NULL, TAG, "manager must not be NULL");
+    XF_TASK_ASSERT(type < _XF_TASK_TYPE_MAX, NULL, TAG, "manager must less than %d", _XF_TASK_TYPE_MAX);
+    XF_TASK_ASSERT(config, NULL, TAG, "config must not be NULL");
 
-    xf_task_pool_handle_t *pool = (xf_task_pool_handle_t *)xf_malloc(sizeof(xf_task_pool_handle_t) +
+    xf_task_pool_handle_t *pool = (xf_task_pool_handle_t *)xf_task_malloc(sizeof(xf_task_pool_handle_t) +
                                   sizeof(xf_task_t) * max_works);
     if (pool == NULL) {
-        XF_LOGE(TAG, "memory alloc failed!");
+        XF_TASK_LOGE(TAG, "memory alloc failed!");
         return NULL;
     }
 
@@ -73,9 +73,9 @@ xf_task_pool_t xf_task_pool_create_with_manager(uint32_t max_works, xf_task_mana
     return pool;
 }
 
-xf_err_t xf_task_pool_delete(xf_task_pool_t pool)
+xf_task_err_t xf_task_pool_delete(xf_task_pool_t pool)
 {
-    XF_ASSERT(pool, XF_ERR_INVALID_ARG, TAG, "pool must not be NULL");
+    XF_TASK_ASSERT(pool, XF_TASK_ERR_INVALID_ARG, TAG, "pool must not be NULL");
     xf_task_pool_handle_t *pool_handle = (xf_task_pool_handle_t *)pool;
 
     // 遍历，删除所有任务
@@ -85,16 +85,16 @@ xf_err_t xf_task_pool_delete(xf_task_pool_t pool)
         xf_task_delete(task_base);
     }
 
-    xf_free(pool);
+    xf_task_free(pool);
 
-    return XF_OK;
+    return XF_TASK_OK;
 }
 
 xf_task_t xf_task_init_from_pool(xf_task_pool_t pool, xf_task_func_t func, void *func_arg, uint16_t priority)
 {
-    XF_ASSERT(pool, NULL, TAG, "pool must not be NULL");
-    XF_ASSERT(func, NULL, TAG, "func must not be NULL");
-    XF_ASSERT(priority < XF_TASK_PRIORITY_LEVELS, NULL, TAG, "priority must less than %d", XF_TASK_PRIORITY_LEVELS);
+    XF_TASK_ASSERT(pool, NULL, TAG, "pool must not be NULL");
+    XF_TASK_ASSERT(func, NULL, TAG, "func must not be NULL");
+    XF_TASK_ASSERT(priority < XF_TASK_PRIORITY_LEVELS, NULL, TAG, "priority must less than %d", XF_TASK_PRIORITY_LEVELS);
 
     xf_task_pool_handle_t *pool_handle = (xf_task_pool_handle_t *)pool;
 
@@ -109,7 +109,7 @@ xf_task_t xf_task_init_from_pool(xf_task_pool_t pool, xf_task_func_t func, void 
             return task_base;
         }
     }
-    XF_LOGW(TAG, "no task can be init from pool");
+    XF_TASK_LOGW(TAG, "no task can be init from pool");
     return NULL;
 }
 
@@ -117,7 +117,7 @@ xf_task_t xf_task_init_from_pool(xf_task_pool_t pool, xf_task_func_t func, void 
 
 static void xf_task_empty(xf_task_t task)
 {
-    UNUSED(task);
+    (void)(task);
 }
 
 #endif

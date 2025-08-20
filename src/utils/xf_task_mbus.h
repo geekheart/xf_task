@@ -18,7 +18,7 @@
 
 #if XF_TASK_MBUS_IS_ENABLE
 
-#include "xf_utils.h"
+// #include "xf_utils.h"
 #include "../kernel/xf_task_kernel.h"
 
 /**
@@ -54,45 +54,45 @@ typedef void (*xf_task_mbus_func_t)(const void *const data, void *user_data);
  * @param manager 需要注册的 task manager。
  * @param topic_id 需要注册的 topic id。
  * @param size topic 传输数据大小。
- * @return xf_err_t
+ * @return xf_task_err_t
  *      - XF_ERR_INITED topic 已经被初始化
- *      - XF_OK topic 注册成功
+ *      - XF_TASK_OK topic 注册成功
  */
-xf_err_t xf_task_mbus_reg_topic_with_manager(xf_task_manager_t *manager, uint32_t topic_id, uint32_t size);
+xf_task_err_t xf_task_mbus_reg_topic_with_manager(xf_task_manager_t *manager, uint32_t topic_id, uint32_t size);
 
 /**
  * @brief 注销 topic
  *
  * @param topic_id topic 的 id 号
- * @return xf_err_t
- *      - XF_ERR_NOT_FOUND topic 不存在
- *      - XF_OK topic 注销成功
+ * @return xf_task_err_t
+ *      - XF_TASK_ERR_NOT_FOUND topic 不存在
+ *      - XF_TASK_OK topic 注销成功
  */
-xf_err_t xf_task_mbus_unreg_topic(uint32_t topic_id);
+xf_task_err_t xf_task_mbus_unreg_topic(uint32_t topic_id);
 
 /**
  * @brief 异步发布指定的 topic ，不会阻塞代码运行。
  *
  * @param topic_id 需要发布的 topic id。
  * @param data 传输数据（传递地址方式）。
- * @return xf_err_t
- *      - XF_ERR_INVALID_ARG 参数错误
- *      - XF_ERR_NOT_FOUND topic 不存在
- *      - XF_OK topic 发布成功
+ * @return xf_task_err_t
+ *      - XF_TASK_ERR_INVALID_ARG 参数错误
+ *      - XF_TASK_ERR_NOT_FOUND topic 不存在
+ *      - XF_TASK_OK topic 发布成功
  */
-xf_err_t xf_task_mbus_pub_async(uint32_t topic_id, void *data);
+xf_task_err_t xf_task_mbus_pub_async(uint32_t topic_id, void *data);
 
 /**
  * @brief 同步发布，直接执行订阅者的回调，执行速度快。
  *
  * @param topic_id 需要发布的 topic id。
  * @param data 传输数据（传递地址方式）。
- * @return xf_err_t
- *      - XF_ERR_INVALID_ARG 参数错误
- *      - XF_ERR_NOT_FOUND topic 不存在
- *      - XF_OK topic 发布成功
+ * @return xf_task_err_t
+ *      - XF_TASK_ERR_INVALID_ARG 参数错误
+ *      - XF_TASK_ERR_NOT_FOUND topic 不存在
+ *      - XF_TASK_OK topic 发布成功
  */
-xf_err_t xf_task_mbus_pub_sync(uint32_t topic_id, void *data);
+xf_task_err_t xf_task_mbus_pub_sync(uint32_t topic_id, void *data);
 
 /**
  * @brief 订阅指定的 topic。
@@ -100,34 +100,34 @@ xf_err_t xf_task_mbus_pub_sync(uint32_t topic_id, void *data);
  * @param topic_id 订阅的 topic id。
  * @param mbus_cb  收到消息后处理的回调。
  * @param user_data 用户的数据。
- * @return xf_err_t
- *      - XF_ERR_INVALID_ARG 参数错误
- *      - XF_ERR_NOT_FOUND topic 不存在
- *      - XF_OK topic 订阅成功
+ * @return xf_task_err_t
+ *      - XF_TASK_ERR_INVALID_ARG 参数错误
+ *      - XF_TASK_ERR_NOT_FOUND topic 不存在
+ *      - XF_TASK_OK topic 订阅成功
  */
-xf_err_t xf_task_mbus_sub(uint32_t topic_id, xf_task_mbus_func_t mbus_cb, void *user_data);
+xf_task_err_t xf_task_mbus_sub(uint32_t topic_id, xf_task_mbus_func_t mbus_cb, void *user_data);
 
 /**
  * @brief 解除订阅。
  *
  * @param topic_id 解除订阅的 topic id。
  * @param mbus_cb  解除的回调。
- * @return xf_err_t
- *      - XF_ERR_INVALID_ARG 参数错误
- *      - XF_ERR_NOT_FOUND topic 不存在
- *      - XF_OK topic 解除订阅成功
+ * @return xf_task_err_t
+ *      - XF_TASK_ERR_INVALID_ARG 参数错误
+ *      - XF_TASK_ERR_NOT_FOUND topic 不存在
+ *      - XF_TASK_OK topic 解除订阅成功
  */
-xf_err_t xf_task_mbus_unsub(uint32_t topic_id, xf_task_mbus_func_t mbus_cb);
+xf_task_err_t xf_task_mbus_unsub(uint32_t topic_id, xf_task_mbus_func_t mbus_cb);
 
 /**
  * @brief 解除 topic下所有订阅。
  *
  * @param topic_id 解除订阅的 topic id。
- * @return xf_err_t
- *      - XF_ERR_NOT_FOUND topic 不存在
- *      - XF_OK topic 解除订阅成功
+ * @return xf_task_err_t
+ *      - XF_TASK_ERR_NOT_FOUND topic 不存在
+ *      - XF_TASK_OK topic 解除订阅成功
  */
-xf_err_t xf_task_mbus_unsub_all(uint32_t topic_id);
+xf_task_err_t xf_task_mbus_unsub_all(uint32_t topic_id);
 
 /* ==================== [Macros] ============================================ */
 

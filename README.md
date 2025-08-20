@@ -177,13 +177,13 @@ graph BT
 typedef struct _xf_task_manager_handle_t {
     xf_task_t current_task;                         /*!< 当前执行任务 */
     xf_task_t urgent_task;                          /*!< 紧急任务 */
-    xf_list_t ready_list[XF_TASK_PRIORITY_LEVELS];  /*!< 任务就绪队列 */
-    xf_list_t blocked_list;                         /*!< 任务阻塞队列 */
-    xf_list_t suspend_list;                         /*!< 任务挂起队列，挂起任务不参与调度，需要手动恢复 */
-    xf_list_t destroy_list;                         /*!< 任务销毁队列，进行异步销毁 */
+    xf_task_list_t ready_list[XF_TASK_PRIORITY_LEVELS];  /*!< 任务就绪队列 */
+    xf_task_list_t blocked_list;                         /*!< 任务阻塞队列 */
+    xf_task_list_t suspend_list;                         /*!< 任务挂起队列，挂起任务不参与调度，需要手动恢复 */
+    xf_task_list_t destroy_list;                         /*!< 任务销毁队列，进行异步销毁 */
     xf_task_on_idle_t on_idle;                      /*!< 空闲任务回调 */
 #if XF_TASK_HUNGER_IS_ENABLE
-    xf_list_t hunger_list;                          /*!< 任务饥饿队列，达到其指定值进行跳跃 */
+    xf_task_list_t hunger_list;                          /*!< 任务饥饿队列，达到其指定值进行跳跃 */
 #endif // XF_TASK_HUNGER_IS_ENABLE
 #if XF_TASK_CONTEXT_IS_ENABLE
     xf_task_context_t context;                      /*!< 调度器上下文 */
@@ -195,7 +195,7 @@ typedef struct _xf_task_manager_handle_t {
 
 ```c
 typedef struct _xf_task_base_t {
-    xf_list_t node;                 /*!< 任务节点，挂载在 manager 上 */
+    xf_task_list_t node;                 /*!< 任务节点，挂载在 manager 上 */
     xf_task_manager_t manager;      /*!< 保存 task 所属的 manager ，以便更快访问 manager */
     xf_task_func_t func;            /*!< 每个任务所执行的内容 */
     void *arg;                      /*!< 任务中用户定义参数 */
@@ -215,7 +215,7 @@ typedef struct _xf_task_base_t {
                                      *   task pool 中通过替换它实现任务池回收任务 */
 
 #if XF_TASK_HUNGER_IS_ENABLE
-    xf_list_t hunger_node;          /*!< 饥饿节点，挂载在 manager 上的 hunger_list 上，
+    xf_task_list_t hunger_node;          /*!< 饥饿节点，挂载在 manager 上的 hunger_list 上，
                                      *   以便更快速的遍历饥饿任务 */
     uint32_t hunger_time;           /*!< 任务饥饿度，单位为 ms。超过该时间，任务爬升一个优先级 */
 #endif
@@ -252,8 +252,8 @@ typedef struct _xf_ntask_handle_t {
     xf_task_base_t base;                /*!< 继承父对象 */
     xf_ntask_compare_func_t compare;    /*!< 直到这个函数返回 0，会通过事件信号触发调度 */
     xf_ntask_status_t status;           /*!< 记录 ntask 退出状态 */
-    xf_list_t lc_list;                  /*!< 记录 ntask 上下文 */
-    xf_list_t args_list;                /*!< 参数收集器 */
+    xf_task_list_t lc_list;                  /*!< 记录 ntask 上下文 */
+    xf_task_list_t args_list;                /*!< 参数收集器 */
 } xf_ntask_handle_t;
 ```
 
@@ -265,7 +265,7 @@ typedef struct _xf_ctask_handle_t {
     size_t stack_size;          /*!< 任务上下文堆栈大小 */
     xf_task_context_t context;  /*!< 任务上下文对象 */
     void *stack;                /*!< 任务上下文堆栈地址 */
-    xf_list_t queue_node;       /*!< 队列等待 */
+    xf_task_list_t queue_node;       /*!< 队列等待 */
 } xf_ctask_handle_t;
 ```
 

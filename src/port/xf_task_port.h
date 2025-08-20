@@ -15,7 +15,7 @@
 /* ==================== [Includes] ========================================== */
 
 #include "xf_task_port_config.h"
-#include "xf_utils.h"
+// #include "xf_utils.h"
 
 /**
  * @cond XFAPI_PORT
@@ -82,11 +82,11 @@ typedef void (*xf_task_swap_context_t)(xf_task_manager_t manager, void *old_cont
  * @brief 设置当前任务的心跳。
  *
  * @param clock 获取心跳的数值。
- * @return xf_err_t
- *      - XF_ERR_INVALID_ARG 参数错误
- *      - XF_OK 参数设置成功
+ * @return xf_task_err_t
+ *      - XF_TASK_ERR_INVALID_ARG 参数错误
+ *      - XF_TASK_OK 参数设置成功
  */
-xf_err_t xf_task_tick_init(xf_task_clock_t clock);
+xf_task_err_t xf_task_tick_init(xf_task_clock_t clock);
 
 #if XF_TASK_CONTEXT_IS_ENABLE
 /**
@@ -94,11 +94,11 @@ xf_err_t xf_task_tick_init(xf_task_clock_t clock);
  *
  * @param create_context 创建保存上下文。
  * @param swap_context 切换上下文。
- * @return xf_err_t
- *      - XF_ERR_INVALID_ARG 参数错误
- *      - XF_OK 参数设置成功
+ * @return xf_task_err_t
+ *      - XF_TASK_ERR_INVALID_ARG 参数错误
+ *      - XF_TASK_OK 参数设置成功
  */
-xf_err_t xf_task_context_init(xf_task_create_context_t create_context, xf_task_swap_context_t swap_context);
+xf_task_err_t xf_task_context_init(xf_task_create_context_t create_context, xf_task_swap_context_t swap_context);
 #endif // XF_TASK_CONTEXT_IS_ENABLE
 
 /* ==================== [Macros] ============================================ */

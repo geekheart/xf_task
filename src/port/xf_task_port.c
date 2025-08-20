@@ -35,15 +35,15 @@ static xf_task_swap_context_t s_swap_context = NULL;
 /* ==================== [Macros] ============================================ */
 
 /* ==================== [Global Functions] ================================== */
-xf_err_t xf_task_tick_init(xf_task_clock_t clock)
+xf_task_err_t xf_task_tick_init(xf_task_clock_t clock)
 {
-    XF_ASSERT(clock, XF_ERR_INVALID_ARG, TAG, "clock function must not be NULL");
+    XF_TASK_ASSERT(clock, XF_TASK_ERR_INVALID_ARG, TAG, "clock function must not be NULL");
 
     s_clock = clock;
 
     xf_task_reg_init();
 
-    return XF_OK;
+    return XF_TASK_OK;
 
 }
 
@@ -53,15 +53,15 @@ xf_task_time_t xf_task_get_ticks(void)
 }
 
 #if XF_TASK_CONTEXT_IS_ENABLE
-xf_err_t xf_task_context_init(xf_task_create_context_t create_context, xf_task_swap_context_t swap_context)
+xf_task_err_t xf_task_context_init(xf_task_create_context_t create_context, xf_task_swap_context_t swap_context)
 {
-    XF_ASSERT(create_context, XF_ERR_INVALID_ARG, TAG, "create_context function must not be NULL");
-    XF_ASSERT(swap_context, XF_ERR_INVALID_ARG, TAG, "swap_context function must not be NULL");
+    XF_TASK_ASSERT(create_context, XF_TASK_ERR_INVALID_ARG, TAG, "create_context function must not be NULL");
+    XF_TASK_ASSERT(swap_context, XF_TASK_ERR_INVALID_ARG, TAG, "swap_context function must not be NULL");
 
     s_create_context = create_context;
     s_swap_context = swap_context;
 
-    return XF_OK;
+    return XF_TASK_OK;
 }
 
 void xf_task_context_create(xf_task_manager_t manager, xf_context_func_t context_entry, void *context, void *stack,

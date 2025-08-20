@@ -15,8 +15,8 @@ static void ttask(xf_task_t task)
     if (num < 5) {
         xf_task_init_from_pool(tpool, ttask, (void *)1, 1);
     } else {
-        xf_err_t err = xf_task_pool_delete(tpool);
-        if (err == XF_OK)
+        xf_task_err_t err = xf_task_pool_delete(tpool);
+        if (err == XF_TASK_OK)
         {
             printf("delete tpool\n");
         }
@@ -34,8 +34,8 @@ static void ctask(xf_task_t task)
         xf_ctask_delay(1000);
         xf_task_init_from_pool(cpool, ctask, (void *)1, 1);
     } else {
-        xf_err_t err = xf_task_pool_delete(cpool);
-        if (err == XF_OK)
+        xf_task_err_t err = xf_task_pool_delete(cpool);
+        if (err == XF_TASK_OK)
         {
             printf("delete cpool\n");
         }

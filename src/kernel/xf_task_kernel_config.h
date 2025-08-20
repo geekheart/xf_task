@@ -15,6 +15,7 @@
 /* ==================== [Includes] ========================================== */
 
 #include "../xf_task_config_internal.h"
+#include "xf_task_list.h"
 
 #ifdef __cplusplus
 extern "C" {

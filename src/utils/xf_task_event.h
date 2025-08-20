@@ -27,7 +27,7 @@ extern "C" {
 /* ==================== [Typedefs] ========================================== */
 
 typedef struct _xf_task_event_t {
-    xf_list_t event_list; //
+    xf_task_list_t event_list; //
 } xf_task_event_t;
 
 typedef enum _xf_task_event_mode_t {
@@ -44,9 +44,9 @@ typedef enum _xf_task_event_mode_t {
  * @param task 事件所阻塞的任务
  * @param event_value 事件等待的值，一个位代表一个事件
  * @param mode 等待模式，有或和与，是多事件触发时的等待的逻辑
- * @return xf_err_t 返回XF_OK表示注册成功
+ * @return xf_task_err_t 返回XF_TASK_OK表示注册成功
  */
-xf_err_t xf_task_event_reg(xf_task_event_t *event, xf_task_t task, uint32_t event_value,
+xf_task_err_t xf_task_event_reg(xf_task_event_t *event, xf_task_t task, uint32_t event_value,
                            xf_task_event_mode_t mode);
 
 /**
@@ -54,23 +54,23 @@ xf_err_t xf_task_event_reg(xf_task_event_t *event, xf_task_t task, uint32_t even
  *
  * @param event 事件对象
  * @param task 事件所归属的任务
- * @return xf_err_t 返回XF_OK表示注册成功
+ * @return xf_task_err_t 返回XF_TASK_OK表示注册成功
  */
-xf_err_t xf_task_event_unreg(xf_task_event_t *event, xf_task_t task);
+xf_task_err_t xf_task_event_unreg(xf_task_event_t *event, xf_task_t task);
 
 /**
  * @brief 发送事件。激活等待事件的任务
  * 
  * @param event 事件对象
  * @param event_value 发送事件的值，可以是多个不同事件，通过|进行组合
- * @return xf_err_t 返回XF_OK表示发送成功 
+ * @return xf_task_err_t 返回XF_TASK_OK表示发送成功 
  */
-xf_err_t xf_task_event_send(xf_task_event_t *event, uint32_t event_value);
+xf_task_err_t xf_task_event_send(xf_task_event_t *event, uint32_t event_value);
 
 /* ==================== [Macros] ============================================ */
 
 #define xf_event_init(self) {\
-    .event_list = XF_LIST_HEAD_INIT(self.event_list),\
+    .event_list = XF_TASK_LIST_HEAD_INIT(self.event_list),\
 }
 
 #if XF_TASK_CONTEXT_IS_ENABLE
@@ -89,8 +89,8 @@ xf_err_t xf_task_event_send(xf_task_event_t *event, uint32_t event_value);
 #endif
 
 #define xf_ntask_event_wait_or(event, task, event_value, timeout) \
-    xf_err_t _err = xf_task_event_reg(&event, task, event_value, XF_TASK_EVENT_OR);\
-    if (_err == XF_OK) {\
+    xf_task_err_t _err = xf_task_event_reg(&event, task, event_value, XF_TASK_EVENT_OR);\
+    if (_err == XF_TASK_OK) {\
         xf_ntask_delay(timeout);\
         xf_task_event_unreg(&event, task);\
     }
@@ -98,8 +98,8 @@ xf_err_t xf_task_event_send(xf_task_event_t *event, uint32_t event_value);
 
 
 #define xf_ntask_event_wait_and(event, task, event_value, timeout) \
-    xf_err_t _err = xf_task_event_reg(&event, task, event_value, XF_TASK_EVENT_AND);\
-    if (_err == XF_OK) {\
+    xf_task_err_t _err = xf_task_event_reg(&event, task, event_value, XF_TASK_EVENT_AND);\
+    if (_err == XF_TASK_OK) {\
         xf_ntask_delay(timeout);\
         xf_task_event_unreg(&event, task);\
     }

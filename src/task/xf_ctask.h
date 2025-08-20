@@ -99,14 +99,14 @@ xf_ctask_queue_t xf_ctask_queue_create_with_manager(
  * @param queue 消息队列对象。
  * @param buffer 消息队列发送的数据。
  * @param timeout 超时时间，规定时间内没发送成功则发送失败。
- * @return xf_err_t
- *      - XF_ERR_INVALID_ARG 参数错误
- *      - XF_ERR_BUSY 任务状态不符合执行条件
- *      - XF_ERR_NOT_SUPPORTED 任务类型不是ctask
- *      - XF_ERR_TIMEOUT 消息队列超时
- *      - XF_OK 消息队列正确发送
+ * @return xf_task_err_t
+ *      - XF_TASK_ERR_INVALID_ARG 参数错误
+ *      - XF_TASK_ERR_BUSY 任务状态不符合执行条件
+ *      - XF_TASK_ERR_NOT_SUPPORTED 任务类型不是ctask
+ *      - xf_task_err_tIMEOUT 消息队列超时
+ *      - XF_TASK_OK 消息队列正确发送
  */
-xf_err_t xf_ctask_queue_send(xf_ctask_queue_t queue, void *buffer, uint32_t timeout);
+xf_task_err_t xf_ctask_queue_send(xf_ctask_queue_t queue, void *buffer, uint32_t timeout);
 
 /**
  * @brief 消息队列接收。
@@ -114,14 +114,14 @@ xf_err_t xf_ctask_queue_send(xf_ctask_queue_t queue, void *buffer, uint32_t time
  * @param queue 消息队列对象。
  * @param buffer 消息队列接收的数据。
  * @param timeout  超时时间，规定时间内没发送成功则接收失败。
- * @return xf_err_t
- *      - XF_ERR_INVALID_ARG 参数错误
- *      - XF_ERR_BUSY 任务状态不符合执行条件
- *      - XF_ERR_NOT_SUPPORTED 任务类型不是ctask
- *      - XF_ERR_TIMEOUT 消息队列超时
- *      - XF_OK 消息队列正确接收
+ * @return xf_task_err_t
+ *      - XF_TASK_ERR_INVALID_ARG 参数错误
+ *      - XF_TASK_ERR_BUSY 任务状态不符合执行条件
+ *      - XF_TASK_ERR_NOT_SUPPORTED 任务类型不是ctask
+ *      - xf_task_err_tIMEOUT 消息队列超时
+ *      - XF_TASK_OK 消息队列正确接收
  */
-xf_err_t xf_ctask_queue_receive(xf_ctask_queue_t queue, void *buffer, uint32_t timeout);
+xf_task_err_t xf_ctask_queue_receive(xf_ctask_queue_t queue, void *buffer, uint32_t timeout);
 
 /* ==================== [Macros] ============================================ */
 

@@ -31,29 +31,29 @@ static const xf_task_vfunc_t *_xf_task_vfunc_group[_XF_TASK_TYPE_MAX] = {0};
 
 /* ==================== [Global Functions] ================================== */
 
-xf_err_t xf_task_vfunc_register(xf_task_type_t type, const xf_task_vfunc_t *vfunc)
+xf_task_err_t xf_task_vfunc_register(xf_task_type_t type, const xf_task_vfunc_t *vfunc)
 {
-    XF_ASSERT(type < _XF_TASK_TYPE_MAX, XF_ERR_INVALID_ARG, TAG, "type must less than %d", _XF_TASK_TYPE_MAX);
-    XF_ASSERT(!_xf_task_vfunc_group[type], XF_ERR_INITED, TAG, "vfunc initialized");
+    XF_TASK_ASSERT(type < _XF_TASK_TYPE_MAX, XF_TASK_ERR_INVALID_ARG, TAG, "type must less than %d", _XF_TASK_TYPE_MAX);
+    XF_TASK_ASSERT(!_xf_task_vfunc_group[type], XF_TASK_ERR_INVALID_ARG, TAG, "vfunc initialized");
 
     _xf_task_vfunc_group[type] = vfunc;
 
-    return XF_OK;
+    return XF_TASK_OK;
 }
 
-xf_err_t xf_task_vfunc_unregister(xf_task_type_t type)
+xf_task_err_t xf_task_vfunc_unregister(xf_task_type_t type)
 {
-    XF_ASSERT(type < _XF_TASK_TYPE_MAX, XF_ERR_INVALID_ARG, TAG, "type must less than %d", _XF_TASK_TYPE_MAX);
+    XF_TASK_ASSERT(type < _XF_TASK_TYPE_MAX, XF_TASK_ERR_INVALID_ARG, TAG, "type must less than %d", _XF_TASK_TYPE_MAX);
 
     _xf_task_vfunc_group[type] = NULL;
 
-    return XF_OK;
+    return XF_TASK_OK;
 }
 
 const xf_task_vfunc_t *xf_task_get_vfunc(xf_task_type_t type)
 {
-    XF_ASSERT(type < _XF_TASK_TYPE_MAX, NULL, TAG, "type must less than %d", _XF_TASK_TYPE_MAX);
-    XF_ASSERT(_xf_task_vfunc_group[type], NULL, TAG, "vfunc uninitialized");
+    XF_TASK_ASSERT(type < _XF_TASK_TYPE_MAX, NULL, TAG, "type must less than %d", _XF_TASK_TYPE_MAX);
+    XF_TASK_ASSERT(_xf_task_vfunc_group[type], NULL, TAG, "vfunc uninitialized");
 
     return _xf_task_vfunc_group[type];
 }
@@ -75,10 +75,10 @@ void xf_task_base_init(xf_task_base_t *task_base, xf_task_manager_t manager, xf_
     task_base->state = XF_TASK_STATE_BLOCKED;
     task_base->vfunc = _xf_task_vfunc_group[type];
     task_base->delete = xf_task_destructor;
-    xf_list_init(&task_base->node);
+    xf_task_list_init(&task_base->node);
     xf_task_manager_task_blocked(manager, task_base);
 #if XF_TASK_HUNGER_IS_ENABLE
-    xf_list_init(&task_base->hunger_node);
+    xf_task_list_init(&task_base->hunger_node);
     task_base->hunger_time = 0;
 #endif // XF_TASK_HUNGER_IS_ENABLE
 #if XF_TASK_USER_DATA_IS_ENABLE
@@ -94,48 +94,48 @@ void xf_task_base_reset(xf_task_base_t *task_base)
     task_base->wake_up = 0;
     task_base->suspend_time = 0;
     task_base->timeout = 0;
-    xf_list_del_init(&task_base->node);
+    xf_task_list_del_init(&task_base->node);
     xf_task_manager_task_blocked(task_base->manager, task_base);
 #if XF_TASK_HUNGER_IS_ENABLE
-    xf_list_del_init(&task_base->hunger_node);
+    xf_task_list_del_init(&task_base->hunger_node);
     task_base->hunger_time = 0;
 #endif // XF_TASK_HUNGER_IS_ENABLE
 }
 
-xf_err_t xf_task_base_set_state(xf_task_t task, xf_task_state_t state)
+xf_task_err_t xf_task_base_set_state(xf_task_t task, xf_task_state_t state)
 {
 
     xf_task_base_t *base = (xf_task_base_t *)task;
 
     if (state == XF_TASK_STATE_DELETE) {
         base->state = XF_TASK_STATE_DELETE;
-        return XF_OK;
+        return XF_TASK_OK;
     }
 
     if (base->state == XF_TASK_STATE_DELETE) {
-        XF_LOGD(TAG, "task will be delete");
-        return XF_ERR_NOT_SUPPORTED;
+        XF_TASK_LOGD(TAG, "task will be delete");
+        return XF_TASK_ERR_NOT_SUPPORTED;
     }
 
     if (base->state == XF_TASK_STATE_SUSPEND) {
-        if (BITS_CHECK(base->signal, XF_TASK_SIGNAL_RESUME)) {
-            BITS_SET0(base->signal, XF_TASK_SIGNAL_RESUME);
+        if (XF_TASK_BITS_CHECK(base->signal, XF_TASK_SIGNAL_RESUME)) {
+            XF_TASK_BITS_SET0(base->signal, XF_TASK_SIGNAL_RESUME);
 
         } else {
-            XF_LOGD(TAG, "task was suspend");
-            return XF_ERR_NOT_SUPPORTED;
+            XF_TASK_LOGD(TAG, "task was suspend");
+            return XF_TASK_ERR_NOT_SUPPORTED;
         }
     }
 
     base->state = state;
 
-    return XF_OK;
+    return XF_TASK_OK;
 }
 
 void xf_task_destructor(xf_task_t task)
 {
-    xf_free(task);
-    XF_LOGD(TAG, "task was delete");
+    xf_task_free(task);
+    XF_TASK_LOGD(TAG, "task was delete");
 }
 
 /* ==================== [Static Functions] ================================== */

@@ -84,8 +84,8 @@ void xf_ntask_set_compare(xf_task_t task, xf_ntask_compare_func_t compare);
 
 void *xf_ntask_args_create(xf_task_t task, const char *name, unsigned int size);
 void *xf_ntask_args_find(xf_task_t task, const char *name);
-xf_err_t xf_ntask_stack_load(xf_task_t task, const char *name, xf_ntask_stack_t *stack, uint32_t len);
-xf_err_t xf_ntask_stack_save(xf_task_t task, const char *name, xf_ntask_stack_t *stack, uint32_t len);
+xf_task_err_t xf_ntask_stack_load(xf_task_t task, const char *name, xf_ntask_stack_t *stack, uint32_t len);
+xf_task_err_t xf_ntask_stack_save(xf_task_t task, const char *name, xf_ntask_stack_t *stack, uint32_t len);
 
 /**
  * @brief 获取上下文位置 （给宏调用）
@@ -102,9 +102,9 @@ uint32_t xf_ntask_get_lc(xf_task_t *task, const char *name);
  * @param task 任务对象
  * @param name 函数上下文名称
  * @param lc 上下文位置
- * @return xf_err_t 上下文位置
+ * @return xf_task_err_t 上下文位置
  */
-xf_err_t xf_ntask_set_lc(xf_task_t *task, const char *name, uint32_t lc);
+xf_task_err_t xf_ntask_set_lc(xf_task_t *task, const char *name, uint32_t lc);
 
 /**
  * @brief 获取退出状态 （给宏调用）
@@ -119,9 +119,9 @@ xf_ntask_status_t xf_ntask_get_exit_status(xf_task_t *task);
  *
  * @param task 任务对象
  * @param status 任务退出状态
- * @return xf_err_t 是否设置成功
+ * @return xf_task_err_t 是否设置成功
  */
-xf_err_t xf_ntask_set_exit_status(xf_task_t *task, xf_ntask_status_t status);
+xf_task_err_t xf_ntask_set_exit_status(xf_task_t *task, xf_ntask_status_t status);
 
 /**
  * @brief 获取是否是最外层函数

@@ -93,11 +93,11 @@ static inline xf_task_t xf_ttask_create_loop_with_manager(
  *
  * @param task 任务对象。
  * @param count 循环次数。
- * @return xf_err_t
- *      - XF_ERR_INVALID_ARG 参数错误
- *      - XF_OK 设置成功
+ * @return xf_task_err_t
+ *      - XF_TASK_ERR_INVALID_ARG 参数错误
+ *      - XF_TASK_OK 设置成功
  */
-xf_err_t xf_ttask_set_count(xf_task_t task, uint32_t count);
+xf_task_err_t xf_ttask_set_count(xf_task_t task, uint32_t count);
 
 /**
  * @brief 获取 ttask 循环次数。
@@ -112,11 +112,11 @@ uint32_t xf_ttask_get_count(xf_task_t task);
  *
  * @param task 任务对象。
  * @param count_max 循环次数上限。
- * @return xf_err_t
- *      - XF_ERR_INVALID_ARG 参数错误
- *      - XF_OK 设置成功
+ * @return xf_task_err_t
+ *      - XF_TASK_ERR_INVALID_ARG 参数错误
+ *      - XF_TASK_OK 设置成功
  */
-xf_err_t xf_ttask_set_count_max(xf_task_t task, uint32_t count_max);
+xf_task_err_t xf_ttask_set_count_max(xf_task_t task, uint32_t count_max);
 
 /* ==================== [Macros] ============================================ */
 
