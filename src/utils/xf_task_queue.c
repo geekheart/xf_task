@@ -13,6 +13,8 @@
 
 #include "xf_task_queue.h"
 
+#if XF_TASK_QUEUE_IS_ENABLE
+
 /* ==================== [Defines] =========================================== */
 
 #define TAG "queue"
@@ -183,3 +185,5 @@ static void move_reader(xf_task_queue_t *const queue)
         queue->reader = queue->head;
     }
 }
+
+#endif // XF_TASK_QUEUE_IS_ENABLE

@@ -40,6 +40,16 @@ extern "C" {
 #   define XF_TASK_POOL_IS_ENABLE (0)
 #endif
 
+/**
+ * @brief 是否使用消息队列功能。
+ * 
+ */
+#if !defined(XF_TASK_QUEUE_ENABLE) || (XF_TASK_QUEUE_ENABLE)
+#   define XF_TASK_QUEUE_IS_ENABLE (1)
+#else
+#   define XF_TASK_QUEUE_IS_ENABLE (0)
+#endif
+
 /* ==================== [Typedefs] ========================================== */
 
 /* ==================== [Global Prototypes] ================================= */

@@ -17,6 +17,8 @@
 
 #include "xf_task_utils_config.h"
 
+#if XF_TASK_QUEUE_IS_ENABLE
+
 #include "../kernel/xf_task_kernel.h"
 
 /**
@@ -170,5 +172,7 @@ xf_task_err_t xf_task_queue_receive(xf_task_queue_t *const queue, void *const bu
  * End of group_xf_task_task_queue
  * @}
  */
+
+#endif // XF_TASK_QUEUE_IS_ENABLE
 
 #endif // __XF_TASK_QUEUE_H__
