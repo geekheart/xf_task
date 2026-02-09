@@ -32,7 +32,7 @@ typedef struct _xf_ttask_handle_t {
 /* ==================== [Static Prototypes] ================================= */
 
 static void xf_ttask_reset(xf_task_t task);
-static xf_task_time_t xf_ttask_update(xf_task_t task);
+static void xf_ttask_update(xf_task_t task, xf_task_time_t now);
 static void xf_ttask_exec(xf_task_manager_t manager);
 static xf_task_t xf_ttask_constructor(xf_task_manager_t manager, xf_task_func_t func, void *func_arg, uint16_t priority,
                                       void *config);
@@ -155,13 +155,12 @@ static void xf_ttask_time_handle(xf_task_t task, uint32_t time_ticks)
 
 }
 
-static xf_task_time_t xf_ttask_update(xf_task_t task)
+static void xf_ttask_update(xf_task_t task, xf_task_time_t now)
 {
     xf_ttask_handle_t *handle = (xf_ttask_handle_t *)task;
-    xf_task_time_t time_ticks = xf_task_get_ticks();
 
     if (handle->base.delay != 0) {
-        xf_ttask_time_handle(task, time_ticks);
+        xf_ttask_time_handle(task, now);
     }
 
     if (XF_TASK_BITS_CHECK(handle->base.signal, XF_TASK_SIGNAL_TIMEOUT)) {
@@ -173,8 +172,6 @@ static xf_task_time_t xf_ttask_update(xf_task_t task)
         XF_TASK_BITS_SET0(handle->base.signal, XF_TASK_SIGNAL_EVENT);
         XF_TASK_BITS_SET1(handle->base.signal, XF_TASK_SIGNAL_READY);
     }
-
-    return time_ticks;
 }
 
 static void xf_ttask_exec(xf_task_manager_t manager)

@@ -46,7 +46,7 @@ typedef struct _xf_ntask_handle_t {
 /* ==================== [Static Prototypes] ================================= */
 
 static void xf_ntask_reset(xf_task_t task);
-static xf_task_time_t xf_ntask_update(xf_task_t task);
+static void xf_ntask_update(xf_task_t task, xf_task_time_t now);
 static void xf_ntask_exec(xf_task_manager_t manager);
 static xf_task_t xf_ntask_constructor(xf_task_manager_t manager, xf_task_func_t func, void *func_arg, uint16_t priority,
                                       void *config);
@@ -78,6 +78,16 @@ void xf_ntask_set_compare(xf_task_t task, xf_ntask_compare_func_t compare)
     xf_ntask_handle_t *handle = (xf_ntask_handle_t *)task;
 
     handle->compare = compare;
+#if XF_TASK_TIMER_HEAP_ENABLE
+    if (compare != NULL) {
+        XF_TASK_BITS_SET1(handle->base.flag, XF_TASK_FLAG_POLL);
+    } else {
+        XF_TASK_BITS_SET0(handle->base.flag, XF_TASK_FLAG_POLL);
+    }
+    if (handle->base.state == XF_TASK_STATE_BLOCKED) {
+        xf_task_manager_task_blocked(handle->base.manager, task);
+    }
+#endif
 }
 
 void *xf_ntask_args_create(xf_task_t task, const char *name, unsigned int size)
@@ -257,6 +267,9 @@ static void xf_ntask_time_handle(xf_task_t task, uint32_t time_ticks)
         XF_TASK_BITS_SET1(handle->base.signal, XF_TASK_SIGNAL_TIMEOUT);
         handle->base.delay = 0;
         handle->compare = NULL;
+#if XF_TASK_TIMER_HEAP_ENABLE
+        XF_TASK_BITS_SET0(handle->base.flag, XF_TASK_FLAG_POLL);
+#endif
     }
 
 }
@@ -270,22 +283,24 @@ static void xf_ntask_event_handle(xf_task_t task)
     if (res == 0) {
         handle->compare = NULL;
         handle->base.delay = 0;
+#if XF_TASK_TIMER_HEAP_ENABLE
+        XF_TASK_BITS_SET0(handle->base.flag, XF_TASK_FLAG_POLL);
+#endif
         XF_TASK_BITS_SET1(handle->base.signal, XF_TASK_SIGNAL_EVENT);
     }
 
 }
 
-static xf_task_time_t xf_ntask_update(xf_task_t task)
+static void xf_ntask_update(xf_task_t task, xf_task_time_t now)
 {
     xf_ntask_handle_t *handle = (xf_ntask_handle_t *)task;
-    xf_task_time_t time_ticks = xf_task_get_ticks();
 
     if (handle->compare != NULL) {
         xf_ntask_event_handle(task);
     }
 
     if (handle->base.delay != 0) {
-        xf_ntask_time_handle(task, time_ticks);
+        xf_ntask_time_handle(task, now);
     }
 
     if (XF_TASK_BITS_CHECK(handle->base.signal, XF_TASK_SIGNAL_TIMEOUT)) {
@@ -297,8 +312,6 @@ static xf_task_time_t xf_ntask_update(xf_task_t task)
         XF_TASK_BITS_SET0(handle->base.signal, XF_TASK_SIGNAL_EVENT);
         XF_TASK_BITS_SET1(handle->base.signal, XF_TASK_SIGNAL_READY);
     }
-
-    return time_ticks;
 }
 
 static void xf_ntask_exec(xf_task_manager_t manager)

@@ -52,6 +52,7 @@ extern "C" {
 #if XF_TASK_HUNGER_IS_ENABLE
 #define XF_TASK_FALG_FEEL_HUNGERY       (1UL << 0) /*!< 饥饿标志，表示该任务具有饥饿值 */
 #endif
+#define XF_TASK_FLAG_POLL               (1UL << 1) /*!< 轮询标志，需要在阻塞队列中轮询更新 */
 
 /* ==================== [Typedefs] ========================================== */
 
@@ -88,7 +89,7 @@ typedef void (*xf_task_reset_t)(xf_task_t task);
  * @param task 任务对象。
  * @return xf_task_time_t 当前更新参考的时间戳
  */
-typedef xf_task_time_t (*xf_task_update_t)(xf_task_t task);
+typedef void (*xf_task_update_t)(xf_task_t task, xf_task_time_t now);
 
 /**
  * @brief 任务执行函数。调度器用于恢复/执行当前任务。
@@ -121,6 +122,12 @@ typedef struct _xf_task_base_t {
     uint32_t signal:    9;          /*!< 任务间信号，内部传递消息使用，外部无法设置，
                                      *   见 XF_TASK_SIGNAL_* 宏 */
     uint32_t priority:  10;         /*!< 任务优先级，具体最大值参考 @ref XF_TASK_PRIORITY_LEVELS */
+#if XF_TASK_READY_BITMAP_ENABLE
+    uint16_t ready_index;           /*!< 当前就绪队列索引，用于位图调度加速 */
+#endif
+#if XF_TASK_TIMER_HEAP_ENABLE
+    int32_t timer_index;            /*!< 定时最小堆索引，<0 表示不在堆中 */
+#endif
     uint32_t delay;                 /*!< 对类型于有上下文是延时时间，对于没有上下文则是定时周期  */
     xf_task_time_t wake_up;          /*!< 唤醒时间，通过延时时间计算而来 */
     xf_task_time_t suspend_time;    /*!< 挂起时间，挂起期间内的时间不会算入延时时间 */

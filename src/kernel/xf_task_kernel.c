@@ -79,6 +79,10 @@ int32_t xf_task_get_timeout(xf_task_t task)
 
     xf_task_base_t *task_base = (xf_task_base_t *)task;
 
+    if (task_base->state == XF_TASK_STATE_BLOCKED) {
+        int64_t diff = (int64_t)xf_task_get_ticks() - (int64_t)task_base->wake_up;
+        task_base->timeout = xf_task_ticks_to_msec(diff);
+    }
     return task_base->timeout;
 }
 
@@ -157,6 +161,11 @@ xf_task_err_t xf_task_trigger(xf_task_t task)
 
     XF_TASK_BITS_SET1(handle->signal, XF_TASK_SIGNAL_EVENT);
 
+    if (handle->state == XF_TASK_STATE_BLOCKED) {
+        XF_TASK_BITS_SET0(handle->signal, XF_TASK_SIGNAL_EVENT);
+        xf_task_manager_task_ready(handle->manager, task);
+    }
+
     return XF_TASK_OK;
 }
 
@@ -210,6 +219,12 @@ xf_task_err_t xf_task_set_delay(xf_task_t task, uint32_t delay_ms)
     int32_t ticks = xf_task_msec_to_ticks(delay_ms);
     handle->delay = ticks;
     handle->wake_up = xf_task_get_ticks() + ticks;
+
+#if XF_TASK_TIMER_HEAP_ENABLE
+    if (handle->state == XF_TASK_STATE_BLOCKED) {
+        xf_task_manager_task_blocked(handle->manager, task);
+    }
+#endif
 
     return XF_TASK_OK;
 }

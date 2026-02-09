@@ -39,6 +39,20 @@ extern "C" {
 #endif
 
 /**
+ * @brief 是否启用就绪位图加速调度（适合优先级较多的场景）。
+ */
+#ifndef XF_TASK_READY_BITMAP_ENABLE
+#   define XF_TASK_READY_BITMAP_ENABLE 1
+#endif
+
+/**
+ * @brief 是否启用定时任务最小堆（减少阻塞队列遍历）。
+ */
+#ifndef XF_TASK_TIMER_HEAP_ENABLE
+#   define XF_TASK_TIMER_HEAP_ENABLE 1
+#endif
+
+/**
  * @brief 配置是否启用饥饿值功能。
  */
 #if !defined(XF_TASK_HUNGER_ENABLE) || (XF_TASK_HUNGER_ENABLE)

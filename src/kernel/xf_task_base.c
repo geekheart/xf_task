@@ -75,6 +75,12 @@ void xf_task_base_init(xf_task_base_t *task_base, xf_task_manager_t manager, xf_
     task_base->state = XF_TASK_STATE_BLOCKED;
     task_base->vfunc = _xf_task_vfunc_group[type];
     task_base->delete = xf_task_destructor;
+#if XF_TASK_READY_BITMAP_ENABLE
+    task_base->ready_index = (uint16_t)XF_TASK_PRIORITY_LEVELS;
+#endif
+#if XF_TASK_TIMER_HEAP_ENABLE
+    task_base->timer_index = -1;
+#endif
     xf_task_list_init(&task_base->node);
     xf_task_manager_task_blocked(manager, task_base);
 #if XF_TASK_HUNGER_IS_ENABLE
@@ -94,6 +100,12 @@ void xf_task_base_reset(xf_task_base_t *task_base)
     task_base->wake_up = 0;
     task_base->suspend_time = 0;
     task_base->timeout = 0;
+#if XF_TASK_READY_BITMAP_ENABLE
+    task_base->ready_index = (uint16_t)XF_TASK_PRIORITY_LEVELS;
+#endif
+#if XF_TASK_TIMER_HEAP_ENABLE
+    task_base->timer_index = -1;
+#endif
     xf_task_list_del_init(&task_base->node);
     xf_task_manager_task_blocked(task_base->manager, task_base);
 #if XF_TASK_HUNGER_IS_ENABLE
@@ -139,5 +151,3 @@ void xf_task_destructor(xf_task_t task)
 }
 
 /* ==================== [Static Functions] ================================== */
-
-

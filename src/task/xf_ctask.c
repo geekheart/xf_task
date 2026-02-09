@@ -44,7 +44,7 @@ static void xf_task_context_entry(void *args);
 static void xf_ctask_reset(xf_task_t task);
 static void xf_ctask_yield(xf_task_manager_t manager);
 static void xf_ctask_resume(xf_task_manager_t manager);
-static xf_task_time_t xf_ctask_update(xf_task_t task);
+static void xf_ctask_update(xf_task_t task, xf_task_time_t now);
 static void xf_ctask_exec(xf_task_manager_t manager);
 static xf_task_t xf_ctask_constructor(xf_task_manager_t manager, xf_task_func_t func, void *func_arg, uint16_t priority,
                                       void *config);
@@ -250,13 +250,11 @@ static xf_task_t xf_ctask_constructor(xf_task_manager_t manager, xf_task_func_t 
     return (xf_task_t)task;
 }
 
-static xf_task_time_t xf_ctask_update(xf_task_t task)
+static void xf_ctask_update(xf_task_t task, xf_task_time_t now)
 {
     xf_ctask_handle_t *handle = (xf_ctask_handle_t *)task;
 
-    xf_task_time_t time_ticks = xf_task_get_ticks();
-
-    int64_t timeout = (int64_t)time_ticks - (int64_t)handle->base.wake_up;
+    int64_t timeout = (int64_t)now - (int64_t)handle->base.wake_up;
 
     // 转换超时时间，如果大于零则触发超时
     handle->base.timeout = xf_task_ticks_to_msec(timeout);
@@ -277,7 +275,6 @@ static xf_task_time_t xf_ctask_update(xf_task_t task)
         XF_TASK_BITS_SET1(handle->base.signal, XF_TASK_SIGNAL_READY);
     }
 
-    return time_ticks;
 }
 
 static void xf_ctask_reset(xf_task_t task)
