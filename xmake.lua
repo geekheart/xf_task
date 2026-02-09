@@ -34,3 +34,12 @@ for _, dir in ipairs(os.dirs("example/*")) do
     local name = path.basename(dir)
     add_target(name)
 end
+
+-- unity tests
+target("xf_task_tests")
+    set_kind("binary")
+    add_cflags("-Wall", "-O0")
+    add_files("tests/*.c")
+    add_files("third_party/unity/src/unity.c")
+    add_includedirs("tests", "third_party/unity/src")
+    add_xf_task()

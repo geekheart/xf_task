@@ -1,0 +1,29 @@
+#ifndef __XF_TASK_CONFIG_H__
+#define __XF_TASK_CONFIG_H__
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#define XF_TASK_PRIORITY_LEVELS 24
+#define XF_TASK_HUNGER_ENABLE 1
+#define XF_TASK_USER_DATA_ENABLE 1
+#define XF_TASK_TICKS_FREQUENCY 1000
+#define XF_TASK_CONTEXT_DISABLE 1
+#define XF_TASK_STDINT_ENABLE 1
+#define XF_TASK_STDDEF_ENABLE 1
+#define XF_TASK_STDBOOL_ENABLE 1
+#define XF_TASK_STDLIB_ENABLE 1
+#define XF_TASK_STRING_ENABLE 1
+#define XF_TASK_STDIO_ENABLE 1
+#define XF_TASK_LOG_LEVEL XF_TASK_LOG_NONE
+#define XF_TASK_TIME_TYPE uint64_t
+#define XF_TASK_MBUS_ENABLE 1
+#define XF_TASK_POOL_ENABLE 1
+#define XF_TASK_QUEUE_ENABLE 1
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
+
+#endif // __XF_TASK_CONFIG_H__
