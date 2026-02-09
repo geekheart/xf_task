@@ -104,8 +104,11 @@ xf_task_err_t xf_task_mbus_unreg_topic(uint32_t topic_id)
     xf_task_list_del_init(&mtopic->node);
     xf_task_free(mtopic);
 
-    xf_task_delete(_mbus_task);
-    _mbus_task = NULL;
+    if (_mbus_task != NULL)
+    {
+        xf_task_delete(_mbus_task);
+        _mbus_task = NULL;
+    }
 
     return XF_TASK_OK;
 }

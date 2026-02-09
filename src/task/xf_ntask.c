@@ -164,6 +164,8 @@ uint32_t xf_ntask_get_lc(xf_task_t *task, const char *name)
     }
     item = xf_ntask_lc_create(&handle->lc_list, name);
 
+    XF_TASK_ASSERT(item, NULL, TAG, "create lc failed");
+
     return item->lc;
 }
 
@@ -183,6 +185,10 @@ bool xf_ntask_lc_is_first(xf_task_t *task, const char *name)
 {
     xf_ntask_handle_t *handle = (xf_ntask_handle_t *)task;
 
+    if (xf_task_list_empty(&handle->lc_list)) {
+        return true;
+    }
+    
     xf_ntask_lc_t *item = xf_task_list_first_entry(&handle->lc_list, xf_ntask_lc_t, node);
     if (item->name == name) {
         return true;
@@ -244,7 +250,7 @@ static void xf_ntask_time_handle(xf_task_t task, uint32_t time_ticks)
 {
     xf_ntask_handle_t *handle = (xf_ntask_handle_t *)task;
 
-    int32_t timeout = time_ticks - handle->base.wake_up;
+    int64_t timeout = (int64_t)time_ticks - (int64_t)handle->base.wake_up;
     // 转换超时时间，如果大于零则触发超时
     handle->base.timeout = xf_task_ticks_to_msec(timeout);
     if (timeout >= 0) {

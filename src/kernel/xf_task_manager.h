@@ -62,6 +62,13 @@ typedef void (*xf_task_on_idle_t)(unsigned long int max_idle_ms);
 xf_task_manager_t xf_task_manager_create(xf_task_on_idle_t on_idle);
 
 /**
+ * @brief 删除任务管理器。
+ *
+ * @param manager 任务管理器对象
+ */
+void xf_task_manager_delete(xf_task_manager_t manager);
+
+/**
  * @brief 设置 manager 的空闲回调函数
  *
  * @param manager 任务管理器对象

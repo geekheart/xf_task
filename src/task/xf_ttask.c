@@ -137,7 +137,7 @@ static void xf_ttask_time_handle(xf_task_t task, uint32_t time_ticks)
 {
     xf_ttask_handle_t *handle = (xf_ttask_handle_t *)task;
 
-    int32_t timeout = time_ticks - handle->base.wake_up;
+    int64_t timeout = (int64_t)time_ticks - (int64_t)handle->base.wake_up;
 
     // 计数器到0，停止更新，进入删除状态
     if (handle->count == 0) {

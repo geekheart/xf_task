@@ -96,6 +96,7 @@ xf_task_manager_t xf_task_get_manager(xf_task_t task)
 void xf_task_feel_hungery_enable(xf_task_t task, uint32_t hunger_time)
 {
     XF_TASK_ASSERT(task, XF_TASK_RETURN_VOID, TAG, "task must not be NULL");
+    XF_TASK_ASSERT(hunger_time, XF_TASK_RETURN_VOID, TAG, "hunger_time must not be 0");
 
     xf_task_base_t *task_base = (xf_task_base_t *)task;
 
@@ -107,6 +108,7 @@ void xf_task_feel_hungery_disable(xf_task_t task)
 {
     XF_TASK_ASSERT(task, XF_TASK_RETURN_VOID, TAG, "task must not be NULL");
     xf_task_base_t *task_base = (xf_task_base_t *)task;
+    xf_task_list_del_init(&task_base->hunger_node);
     task_base->hunger_time = 0;
     XF_TASK_BITS_SET0(task_base->flag, XF_TASK_FALG_FEEL_HUNGERY);
 }

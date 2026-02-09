@@ -173,10 +173,13 @@ void xf_task_manager_run(xf_task_manager_t manager)
         // 对感受饥饿的任务进行临时优先级跳跃
         xf_task_list_for_each_entry_safe(task, _task, &manager_handle->hunger_list, xf_task_base_t, hunger_node) {
             xf_task_update_timeout(task);
-
+            uint32_t level = 0;
             // 计算爬升等级
-            uint32_t level = task->timeout / task->hunger_time;
-
+            if (task->timeout > 0 && task->hunger_time > 0) 
+            {
+                level = task->timeout / task->hunger_time;
+            }
+            
             // 限制爬升等级
             int priority = (int)task->priority - (int)level;
             if (priority < 0) {

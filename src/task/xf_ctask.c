@@ -202,6 +202,7 @@ xf_task_err_t xf_ctask_queue_receive(xf_ctask_queue_t queue, void *buffer, uint3
             xf_ctask_delay_with_manager(manager, timeout);
             // 达到超时返回发送失败
             if (task->timeout >= 0) {
+                xf_task_list_del_init(queue_node);
                 XF_TASK_LOGD(TAG, "queue timeout");
                 return XF_TASK_ERR_TIMEOUT;
             }
@@ -255,7 +256,7 @@ static xf_task_time_t xf_ctask_update(xf_task_t task)
 
     xf_task_time_t time_ticks = xf_task_get_ticks();
 
-    int32_t timeout = time_ticks - handle->base.wake_up;
+    int64_t timeout = (int64_t)time_ticks - (int64_t)handle->base.wake_up;
 
     // 转换超时时间，如果大于零则触发超时
     handle->base.timeout = xf_task_ticks_to_msec(timeout);
