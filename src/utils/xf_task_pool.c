@@ -50,7 +50,6 @@ xf_task_pool_t xf_task_pool_create_with_manager(uint32_t max_works, xf_task_mana
     XF_TASK_ASSERT(max_works, NULL, TAG, "max_works must not be 0");
     XF_TASK_ASSERT(manager, NULL, TAG, "manager must not be NULL");
     XF_TASK_ASSERT(type < _XF_TASK_TYPE_MAX, NULL, TAG, "manager must less than %d", _XF_TASK_TYPE_MAX);
-    XF_TASK_ASSERT(config, NULL, TAG, "config must not be NULL");
 
     xf_task_pool_handle_t *pool = (xf_task_pool_handle_t *)xf_task_malloc(sizeof(xf_task_pool_handle_t) +
                                   sizeof(xf_task_t) * max_works);

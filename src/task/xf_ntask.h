@@ -263,10 +263,10 @@ bool xf_ntask_lc_is_first(xf_task_t *task, const char *name);
         xf_task_trigger(_ntask);             \
         xf_ntask_set_lc(_ntask, __func__, __LINE__);   \
         xf_ntask_set_exit_status(_ntask, XF_NTASK_YIELDED); \
-        xf_ntask_stack_save(_ntask, __func__, &_stack, _stack_size);\
+        xf_ntask_stack_save(_ntask, __func__, _stack, _stack_size);\
         return;                             \
     case __LINE__:                          \
-        xf_ntask_stack_load(_ntask, __func__, &_stack, _stack_size);\
+        xf_ntask_stack_load(_ntask, __func__, _stack, _stack_size);\
     } while (0)
 
 #define xf_ntask_until(compare_cb)             \

@@ -58,7 +58,7 @@ typedef void (*xf_task_mbus_func_t)(const void *const data, void *user_data);
  *      - XF_ERR_INITED topic 已经被初始化
  *      - XF_TASK_OK topic 注册成功
  */
-xf_task_err_t xf_task_mbus_reg_topic_with_manager(xf_task_manager_t *manager, uint32_t topic_id, uint32_t size);
+xf_task_err_t xf_task_mbus_reg_topic_with_manager(xf_task_manager_t manager, uint32_t topic_id, uint32_t size);
 
 /**
  * @brief 注销 topic

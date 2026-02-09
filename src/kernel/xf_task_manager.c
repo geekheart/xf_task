@@ -332,6 +332,6 @@ static inline void xf_task_run(xf_task_base_t *task)
 
 static inline void xf_task_update_timeout(xf_task_base_t *task)
 {
-    xf_task_time_t timeout = xf_task_get_ticks() - task->wake_up;
+    int64_t timeout = (int64_t)xf_task_get_ticks() - (int64_t)task->wake_up;
     task->timeout = xf_task_ticks_to_msec(timeout);
 }

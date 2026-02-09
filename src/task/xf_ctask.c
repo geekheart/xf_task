@@ -139,7 +139,7 @@ xf_task_err_t xf_ctask_queue_send(xf_ctask_queue_t queue, void *buffer, uint32_t
         return XF_TASK_ERR_BUSY;
     }
 
-    if (XF_TASK_TYPE_CTASK != task->state) {
+    if (XF_TASK_TYPE_CTASK != task->type) {
         XF_TASK_LOGE(TAG, "task must ctask");
         return XF_TASK_ERR_NOT_SUPPORTED;
     }
@@ -152,6 +152,7 @@ xf_task_err_t xf_ctask_queue_send(xf_ctask_queue_t queue, void *buffer, uint32_t
             // 达到超时返回发送失败
             if (task->timeout >= 0) {
                 XF_TASK_LOGD(TAG, "queue timeout");
+                xf_task_list_del_init(queue_node);
                 return XF_TASK_ERR_TIMEOUT;
             }
             // 没达到超时进入循环继续进行接下来的超时

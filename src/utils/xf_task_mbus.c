@@ -54,7 +54,7 @@ static xf_task_t _mbus_task = NULL;
 
 /* ==================== [Global Functions] ================================== */
 
-xf_task_err_t xf_task_mbus_reg_topic_with_manager(xf_task_manager_t *manager, uint32_t topic_id, uint32_t size)
+xf_task_err_t xf_task_mbus_reg_topic_with_manager(xf_task_manager_t manager, uint32_t topic_id, uint32_t size)
 {
     XF_TASK_ASSERT(xf_task_mbus_find(topic_id, NULL), XF_TASK_ERR_INVALID_ARG, TAG, "topic:%d is exists", (int)topic_id);
 
