@@ -104,7 +104,7 @@ xf_task_time_t task_get_tick(void)
 
 void task_on_idle(unsigned long int max_idle_ms)
 {
-    usleep(max_idle_ms);
+    usleep(max_idle_ms * 1000);
 }
 
 /* ==================== [Static Functions] ================================== */

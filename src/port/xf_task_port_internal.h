@@ -35,8 +35,8 @@ void xf_task_context_swap(xf_task_manager_t manager, void *old_context, void *ne
 xf_task_context_t *xf_task_manager_get_context(xf_task_manager_t manager);
 #endif // XF_TASK_CONTEXT_IS_ENABLE
 
-int32_t xf_task_msec_to_ticks(int32_t msec);
-int32_t xf_task_ticks_to_msec(int32_t ticks);
+int64_t xf_task_msec_to_ticks(int64_t msec);
+int64_t xf_task_ticks_to_msec(int64_t ticks);
 
 /* ==================== [Macros] ============================================ */
 

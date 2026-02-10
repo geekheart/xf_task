@@ -82,7 +82,6 @@ void xf_task_base_init(xf_task_base_t *task_base, xf_task_manager_t manager, xf_
     task_base->timer_index = -1;
 #endif
     xf_task_list_init(&task_base->node);
-    xf_task_manager_task_blocked(manager, task_base);
 #if XF_TASK_HUNGER_IS_ENABLE
     xf_task_list_init(&task_base->hunger_node);
     task_base->hunger_time = 0;
@@ -90,6 +89,7 @@ void xf_task_base_init(xf_task_base_t *task_base, xf_task_manager_t manager, xf_
 #if XF_TASK_USER_DATA_IS_ENABLE
     task_base->user_data = NULL;
 #endif
+    xf_task_manager_task_blocked(manager, task_base);
 }
 
 void xf_task_base_reset(xf_task_base_t *task_base)

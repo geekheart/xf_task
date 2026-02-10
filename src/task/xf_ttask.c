@@ -119,6 +119,11 @@ static xf_task_t xf_ttask_constructor(xf_task_manager_t manager, xf_task_func_t 
     task->count_max = ttask_config->count;
 
     task->base.wake_up = xf_task_get_ticks() + ticks;
+    XF_TASK_LOGD(TAG, "create delay_ms=%u ticks=%u wake_up=%llu count=%u",
+                 (unsigned int)ttask_config->delay_ms,
+                 (unsigned int)ticks,
+                 (unsigned long long)task->base.wake_up,
+                 (unsigned int)task->count);
 
     return (xf_task_t)task;
 }
@@ -159,6 +164,19 @@ static void xf_ttask_update(xf_task_t task, xf_task_time_t now)
 {
     xf_ttask_handle_t *handle = (xf_ttask_handle_t *)task;
 
+#if XF_TASK_LOG_LEVEL >= XF_TASK_LOG_DEBUG
+    static uint32_t dbg_cnt = 0;
+    if (dbg_cnt < 5) {
+        XF_TASK_LOGD(TAG, "update now=%llu wake_up=%llu delay=%u timeout=%d signal=0x%x",
+                     (unsigned long long)now,
+                     (unsigned long long)handle->base.wake_up,
+                     (unsigned int)handle->base.delay,
+                     (int)handle->base.timeout,
+                     (unsigned int)handle->base.signal);
+        dbg_cnt++;
+    }
+#endif
+
     if (handle->base.delay != 0) {
         xf_ttask_time_handle(task, now);
     }
@@ -166,6 +184,12 @@ static void xf_ttask_update(xf_task_t task, xf_task_time_t now)
     if (XF_TASK_BITS_CHECK(handle->base.signal, XF_TASK_SIGNAL_TIMEOUT)) {
         XF_TASK_BITS_SET0(handle->base.signal, XF_TASK_SIGNAL_TIMEOUT);
         XF_TASK_BITS_SET1(handle->base.signal, XF_TASK_SIGNAL_READY);
+#if XF_TASK_LOG_LEVEL >= XF_TASK_LOG_DEBUG
+        XF_TASK_LOGD(TAG, "ready by timeout now=%llu wake_up=%llu timeout=%d",
+                     (unsigned long long)now,
+                     (unsigned long long)handle->base.wake_up,
+                     (int)handle->base.timeout);
+#endif
     }
 
     if (XF_TASK_BITS_CHECK(handle->base.signal, XF_TASK_SIGNAL_EVENT)) {

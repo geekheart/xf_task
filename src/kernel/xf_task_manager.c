@@ -15,6 +15,7 @@
 #include "../port/xf_task_port_internal.h"
 #include "xf_task_manager.h"
 #include "xf_task_base.h"
+#include <limits.h>
 
 
 /* ==================== [Defines] =========================================== */
@@ -51,6 +52,7 @@ typedef struct _xf_task_manager_handle_t {
 
 static inline void xf_task_run(xf_task_base_t *task);
 static inline void xf_task_update_timeout(xf_task_base_t *task, xf_task_time_t now);
+static inline int32_t xf_task_ticks_to_msec_clamp(int64_t ticks);
 #if XF_TASK_READY_BITMAP_ENABLE
 static inline void xf_task_ready_list_add(xf_task_manager_handle_t *manager, xf_task_base_t *task, uint16_t prio);
 static inline void xf_task_ready_list_del(xf_task_manager_handle_t *manager, xf_task_base_t *task);
@@ -126,13 +128,13 @@ void xf_task_manager_run(xf_task_manager_t manager)
 
     xf_task_manager_handle_t *manager_handle = (xf_task_manager_handle_t *)manager;
 #if !XF_TASK_READY_BITMAP_ENABLE
-    volatile uint32_t index = 0;
+    uint32_t index = 0;
 #endif
     // 阻塞的最小时间，即是空闲的最大时间
-    volatile int32_t max_idle_ms = INT32_MAX;
+    int64_t max_idle_ms = INT32_MAX;
     // 保存ticks用于后续校准最大空闲
-    volatile uint32_t idle_time_ticks = 0;
-    volatile bool is_get_func = false;
+    xf_task_time_t idle_time_ticks = 0;
+    bool is_get_func = false;
     xf_task_base_t *task, *_task;
 
     xf_task_time_t now = xf_task_get_ticks();
@@ -154,6 +156,7 @@ void xf_task_manager_run(xf_task_manager_t manager)
             XF_TASK_BITS_SET0(task->signal, XF_TASK_SIGNAL_READY);
 #if XF_TASK_HUNGER_IS_ENABLE
             if (XF_TASK_BITS_CHECK(task->flag, XF_TASK_FALG_FEEL_HUNGERY)) {
+                xf_task_list_del_init(&task->hunger_node);
                 xf_task_list_add_tail(&task->hunger_node, &manager_handle->hunger_list);
             }
 #endif // XF_TASK_HUNGER_IS_ENABLE
@@ -191,6 +194,7 @@ void xf_task_manager_run(xf_task_manager_t manager)
             XF_TASK_BITS_SET0(task->signal, XF_TASK_SIGNAL_READY);
 #if XF_TASK_HUNGER_IS_ENABLE
             if (XF_TASK_BITS_CHECK(task->flag, XF_TASK_FALG_FEEL_HUNGERY)) {
+                xf_task_list_del_init(&task->hunger_node);
                 xf_task_list_add_tail(&task->hunger_node, &manager_handle->hunger_list);
             }
 #endif
@@ -209,7 +213,7 @@ void xf_task_manager_run(xf_task_manager_t manager)
     xf_task_base_t *heap_top = xf_task_timer_heap_top(manager_handle);
     if (heap_top != NULL) {
         int64_t remain = (int64_t)heap_top->wake_up - (int64_t)now;
-        int32_t remain_ms = xf_task_ticks_to_msec(remain);
+        int32_t remain_ms = xf_task_ticks_to_msec_clamp(remain);
         if (remain_ms < 0) {
             remain_ms = 0;
         }
@@ -261,11 +265,28 @@ void xf_task_manager_run(xf_task_manager_t manager)
         }
         // 进一步修正空闲时间
         xf_task_time_t ticks = xf_task_get_ticks();
-        max_idle_ms -=  xf_task_ticks_to_msec(ticks - idle_time_ticks);
-        max_idle_ms = max_idle_ms < 0 ? 0 : max_idle_ms;
+        int64_t diff_ticks = (int64_t)(ticks - idle_time_ticks);
+        max_idle_ms -=  xf_task_ticks_to_msec_clamp(diff_ticks);
+        if (max_idle_ms < 0) {
+            max_idle_ms = 0;
+        }
         // 执行空闲回调
         if (manager_handle->on_idle != NULL) {
-            manager_handle->on_idle(max_idle_ms);
+#if XF_TASK_LOG_LEVEL >= XF_TASK_LOG_DEBUG
+            bool blocked_empty = xf_task_list_empty(&manager_handle->blocked_list);
+#if XF_TASK_TIMER_HEAP_ENABLE
+            size_t heap_size = manager_handle->timer_heap_size;
+#else
+            size_t heap_size = 0;
+#endif
+            XF_TASK_LOGD(TAG, "idle max_idle_ms=%ld blocked_empty=%d heap_size=%lu",
+                         (long)max_idle_ms, blocked_empty ? 1 : 0, (unsigned long)heap_size);
+#endif
+            uint64_t idle_u = (max_idle_ms <= 0) ? 0U : (uint64_t)max_idle_ms;
+            unsigned long int idle_ms = (idle_u > (uint64_t)ULONG_MAX)
+                                            ? ULONG_MAX
+                                            : (unsigned long int)idle_u;
+            manager_handle->on_idle(idle_ms);
         }
     }
 #if XF_TASK_HUNGER_IS_ENABLE
@@ -273,6 +294,16 @@ void xf_task_manager_run(xf_task_manager_t manager)
         // 对事件触发任务一视同仁
         // 对感受饥饿的任务进行临时优先级跳跃
         xf_task_list_for_each_entry_safe(task, _task, &manager_handle->hunger_list, xf_task_base_t, hunger_node) {
+            if (task->state != XF_TASK_STATE_READY) {
+                xf_task_list_del_init(&task->hunger_node);
+                continue;
+            }
+#if XF_TASK_READY_BITMAP_ENABLE
+            if (task->ready_index >= XF_TASK_PRIORITY_LEVELS) {
+                xf_task_list_del_init(&task->hunger_node);
+                continue;
+            }
+#endif
             xf_task_update_timeout(task, now);
             uint32_t level = 0;
             // 计算爬升等级
@@ -317,9 +348,15 @@ xf_task_err_t xf_task_manager_task_ready(xf_task_manager_t manager, xf_task_t ta
     xf_task_manager_handle_t *manager_handle = (xf_task_manager_handle_t *)manager;
 
     xf_task_base_t *task_base = task;
+    xf_task_state_t prev_state = task_base->state;
+
+    xf_task_err_t err = xf_task_base_set_state(task, XF_TASK_STATE_READY);
+    if (err != XF_TASK_OK) {
+        return err;
+    }
 
 #if XF_TASK_READY_BITMAP_ENABLE
-    if (task_base->state == XF_TASK_STATE_READY && task_base->ready_index < XF_TASK_PRIORITY_LEVELS) {
+    if (prev_state == XF_TASK_STATE_READY && task_base->ready_index < XF_TASK_PRIORITY_LEVELS) {
         xf_task_ready_list_del(manager_handle, task_base);
     } else {
         xf_task_list_del_init(&task_base->node);
@@ -333,12 +370,17 @@ xf_task_err_t xf_task_manager_task_ready(xf_task_manager_t manager, xf_task_t ta
     }
 #endif
 
-    xf_task_base_set_state(task, XF_TASK_STATE_READY);
 #if XF_TASK_READY_BITMAP_ENABLE
     xf_task_ready_list_add(manager_handle, task_base, task_base->priority);
 #else
     xf_task_list_add_tail(&task_base->node, &manager_handle->ready_list[task_base->priority]);
 #endif
+#if XF_TASK_HUNGER_IS_ENABLE
+    if (XF_TASK_BITS_CHECK(task_base->flag, XF_TASK_FALG_FEEL_HUNGERY)) {
+        xf_task_list_del_init(&task_base->hunger_node);
+        xf_task_list_add_tail(&task_base->hunger_node, &manager_handle->hunger_list);
+    }
+#endif // XF_TASK_HUNGER_IS_ENABLE
 
     return XF_TASK_OK;
 }
@@ -350,9 +392,15 @@ xf_task_err_t xf_task_manager_task_suspend(xf_task_manager_t manager, xf_task_t 
     xf_task_manager_handle_t *manager_handle = (xf_task_manager_handle_t *)manager;
 
     xf_task_base_t *task_base = task;
+    xf_task_state_t prev_state = task_base->state;
+
+    xf_task_err_t err = xf_task_base_set_state(task, XF_TASK_STATE_SUSPEND);
+    if (err != XF_TASK_OK) {
+        return err;
+    }
 
 #if XF_TASK_READY_BITMAP_ENABLE
-    if (task_base->state == XF_TASK_STATE_READY && task_base->ready_index < XF_TASK_PRIORITY_LEVELS) {
+    if (prev_state == XF_TASK_STATE_READY && task_base->ready_index < XF_TASK_PRIORITY_LEVELS) {
         xf_task_ready_list_del(manager_handle, task_base);
     } else {
         xf_task_list_del_init(&task_base->node);
@@ -365,8 +413,10 @@ xf_task_err_t xf_task_manager_task_suspend(xf_task_manager_t manager, xf_task_t 
         xf_task_timer_heap_remove(manager_handle, task_base);
     }
 #endif
+#if XF_TASK_HUNGER_IS_ENABLE
+    xf_task_list_del_init(&task_base->hunger_node);
+#endif // XF_TASK_HUNGER_IS_ENABLE
 
-    xf_task_base_set_state(task, XF_TASK_STATE_SUSPEND);
     xf_task_list_add_tail(&task_base->node, &manager_handle->suspend_list);
 
     return XF_TASK_OK;
@@ -379,9 +429,15 @@ xf_task_err_t xf_task_manager_task_destory(xf_task_manager_t manager, xf_task_t 
     xf_task_manager_handle_t *manager_handle = (xf_task_manager_handle_t *)manager;
 
     xf_task_base_t *task_base = task;
+    xf_task_state_t prev_state = task_base->state;
+
+    xf_task_err_t err = xf_task_base_set_state(task, XF_TASK_STATE_DELETE);
+    if (err != XF_TASK_OK) {
+        return err;
+    }
 
 #if XF_TASK_READY_BITMAP_ENABLE
-    if (task_base->state == XF_TASK_STATE_READY && task_base->ready_index < XF_TASK_PRIORITY_LEVELS) {
+    if (prev_state == XF_TASK_STATE_READY && task_base->ready_index < XF_TASK_PRIORITY_LEVELS) {
         xf_task_ready_list_del(manager_handle, task_base);
     } else {
         xf_task_list_del_init(&task_base->node);
@@ -394,8 +450,10 @@ xf_task_err_t xf_task_manager_task_destory(xf_task_manager_t manager, xf_task_t 
         xf_task_timer_heap_remove(manager_handle, task_base);
     }
 #endif
+#if XF_TASK_HUNGER_IS_ENABLE
+    xf_task_list_del_init(&task_base->hunger_node);
+#endif // XF_TASK_HUNGER_IS_ENABLE
 
-    xf_task_base_set_state(task, XF_TASK_STATE_DELETE);
     xf_task_list_add_tail(&task_base->node, &manager_handle->destroy_list);
 
     return XF_TASK_OK;
@@ -408,9 +466,22 @@ xf_task_err_t xf_task_manager_task_blocked(xf_task_manager_t manager, xf_task_t 
     xf_task_manager_handle_t *manager_handle = (xf_task_manager_handle_t *)manager;
 
     xf_task_base_t *task_base = task;
+    xf_task_state_t prev_state = task_base->state;
+
+    xf_task_err_t err = xf_task_base_set_state(task, XF_TASK_STATE_BLOCKED);
+    if (err != XF_TASK_OK) {
+        return err;
+    }
+
+#if XF_TASK_LOG_LEVEL >= XF_TASK_LOG_DEBUG
+    XF_TASK_LOGD(TAG, "task blocked prio=%u delay=%u wake_up=%llu",
+                 (unsigned int)task_base->priority,
+                 (unsigned int)task_base->delay,
+                 (unsigned long long)task_base->wake_up);
+#endif
 
 #if XF_TASK_READY_BITMAP_ENABLE
-    if (task_base->state == XF_TASK_STATE_READY && task_base->ready_index < XF_TASK_PRIORITY_LEVELS) {
+    if (prev_state == XF_TASK_STATE_READY && task_base->ready_index < XF_TASK_PRIORITY_LEVELS) {
         xf_task_ready_list_del(manager_handle, task_base);
     } else {
         xf_task_list_del_init(&task_base->node);
@@ -423,8 +494,10 @@ xf_task_err_t xf_task_manager_task_blocked(xf_task_manager_t manager, xf_task_t 
         xf_task_timer_heap_remove(manager_handle, task_base);
     }
 #endif
+#if XF_TASK_HUNGER_IS_ENABLE
+    xf_task_list_del_init(&task_base->hunger_node);
+#endif // XF_TASK_HUNGER_IS_ENABLE
 
-    xf_task_base_set_state(task, XF_TASK_STATE_BLOCKED);
 #if XF_TASK_TIMER_HEAP_ENABLE
     if (task_base->delay > 0 && !XF_TASK_BITS_CHECK(task_base->flag, XF_TASK_FLAG_POLL)) {
         if (!xf_task_timer_heap_push(manager_handle, task_base)) {
@@ -460,8 +533,12 @@ xf_task_err_t xf_task_set_urgent_task_with_manager(xf_task_manager_t manager, xf
         return XF_TASK_ERR_BUSY;
     }
 
+    xf_task_err_t err = xf_task_manager_task_ready(manager, task);
+    if (err != XF_TASK_OK) {
+        return err;
+    }
+
     manager_handle->urgent_task = task;
-    xf_task_base_set_state(task, XF_TASK_STATE_READY);
 
     return XF_TASK_OK;
 }
@@ -475,11 +552,12 @@ xf_task_err_t xf_task_manager_set_compensation_time(xf_task_manager_t manager, x
     xf_task_base_t *task, *_task;
     xf_task_time_t compensation_ticks = xf_task_msec_to_ticks(time_ms);
     xf_task_list_for_each_entry_safe(task, _task, &manager_handle->blocked_list, xf_task_base_t, node) {
-        task->wake_up -= compensation_ticks;
+        task->wake_up = (task->wake_up > compensation_ticks) ? (task->wake_up - compensation_ticks) : 0;
     }
 #if XF_TASK_TIMER_HEAP_ENABLE
     for (size_t i = 0; i < manager_handle->timer_heap_size; i++) {
-        manager_handle->timer_heap[i]->wake_up -= compensation_ticks;
+        xf_task_base_t *t = manager_handle->timer_heap[i];
+        t->wake_up = (t->wake_up > compensation_ticks) ? (t->wake_up - compensation_ticks) : 0;
     }
 #endif
 
@@ -531,7 +609,18 @@ static inline void xf_task_run(xf_task_base_t *task)
 static inline void xf_task_update_timeout(xf_task_base_t *task, xf_task_time_t now)
 {
     int64_t timeout = (int64_t)now - (int64_t)task->wake_up;
-    task->timeout = xf_task_ticks_to_msec(timeout);
+    task->timeout = xf_task_ticks_to_msec_clamp(timeout);
+}
+
+static inline int32_t xf_task_ticks_to_msec_clamp(int64_t ticks)
+{
+    if (ticks > INT32_MAX) {
+        return xf_task_ticks_to_msec(INT32_MAX);
+    }
+    if (ticks < INT32_MIN) {
+        return xf_task_ticks_to_msec(INT32_MIN);
+    }
+    return xf_task_ticks_to_msec((int32_t)ticks);
 }
 
 #if XF_TASK_READY_BITMAP_ENABLE
@@ -563,6 +652,14 @@ static inline int xf_task_ready_find_first(xf_task_manager_handle_t *manager)
         if (w == 0U) {
             continue;
         }
+#if defined(__GNUC__) || defined(__clang__)
+        uint32_t bi = (uint32_t)__builtin_ctz(w);
+        uint32_t idx = wi * 32U + bi;
+        if (idx < XF_TASK_PRIORITY_LEVELS) {
+            return (int)idx;
+        }
+        return -1;
+#else
         for (uint32_t bi = 0; bi < 32U; bi++) {
             if (w & (1U << bi)) {
                 uint32_t idx = wi * 32U + bi;
@@ -572,6 +669,7 @@ static inline int xf_task_ready_find_first(xf_task_manager_handle_t *manager)
                 return -1;
             }
         }
+#endif
     }
     return -1;
 }
@@ -644,9 +742,15 @@ static inline bool xf_task_timer_heap_reserve(xf_task_manager_handle_t *manager,
     if (new_heap == NULL) {
         return false;
     }
+#if XF_TASK_STRING_IS_ENABLE
+    if (manager->timer_heap_size > 0) {
+        xf_task_memcpy(new_heap, manager->timer_heap, sizeof(xf_task_base_t *) * manager->timer_heap_size);
+    }
+#else
     for (size_t i = 0; i < manager->timer_heap_size; i++) {
         new_heap[i] = manager->timer_heap[i];
     }
+#endif
     if (manager->timer_heap != NULL) {
         xf_task_free(manager->timer_heap);
     }
